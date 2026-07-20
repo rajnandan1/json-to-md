@@ -27,7 +27,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "bench": "vitest bench --run"
+    "bench": "vitest bench --run",
+    "demo": "pnpm build && vite demo"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
@@ -36,6 +37,7 @@
     "marked": "^15.0.0",
     "tsup": "^8.3.5",
     "typescript": "^5.7.2",
+    "vite": "^8.1.5",
     "vitest": "^2.1.8"
   }
 }
