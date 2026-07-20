@@ -67,7 +67,18 @@
         flex-wrap: wrap;
       }
       .pane-head strong { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
-      .examples { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+      .pane-subhead {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem 0.75rem;
+        flex-wrap: wrap;
+        padding: 0.5rem clamp(0.75rem, 2vw, 1.25rem);
+        border-bottom: 1px solid var(--border);
+      }
+      .hint { font-size: 0.76rem; color: var(--muted); }
+      .hint code { font-family: var(--mono); color: var(--accent); }
+      .actions { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+      .examples { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-left: auto; }
       button {
         font: inherit;
         font-size: 0.78rem;
@@ -143,6 +154,13 @@
       <section class="pane">
         <div class="pane-head">
           <strong>JSON input</strong>
+          <div class="toggle" id="input-mode">
+            <button id="mode-serialized" aria-pressed="true" title="convertJsonText — parse the raw text, preserving each number's exact spelling (e.g. 1.00)">Serialized</button>
+            <button id="mode-parsed" aria-pressed="false" title="convertJsonValue — JSON.parse first, then convert the parsed value (numeric spelling is lost)">Parsed</button>
+          </div>
+        </div>
+        <div class="pane-subhead">
+          <span class="hint" id="input-hint"></span>
           <div class="examples" id="examples"></div>
         </div>
         <textarea id="input" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
@@ -150,9 +168,12 @@
       <section class="pane">
         <div class="pane-head">
           <strong>Output</strong>
-          <div class="toggle">
-            <button id="mode-preview" aria-pressed="true">Preview</button>
-            <button id="mode-source" aria-pressed="false">Markdown</button>
+          <div class="actions">
+            <button id="copy" title="Copy the Markdown source to the clipboard">Copy Markdown</button>
+            <div class="toggle">
+              <button id="mode-preview" aria-pressed="true">Preview</button>
+              <button id="mode-source" aria-pressed="false">Markdown</button>
+            </div>
           </div>
         </div>
         <div class="output" id="output"></div>
