@@ -146,6 +146,22 @@ pnpm test        # vitest run
 pnpm bench       # 10 MiB conversion benchmarks
 ```
 
+## Releasing
+
+One version ships everywhere — npm (`@rajnandan1/json-to-md`), the Go module (via the `go/vX.Y.Z` tag), and the Homebrew tap — from one pushed tag:
+
+```sh
+git checkout main && git pull
+npm version patch      # or minor / major, or an explicit version
+git push --follow-tags
+```
+
+The `v*` tag triggers [`release.yml`](.github/workflows/release.yml): a gate first (both test suites, the shared [`corpus/`](corpus/), the cross-implementation fuzz differ, and a tag↔package.json check), then three independent publish legs — npm publish with provenance, the `go/vX.Y.Z` module tag, and [GoReleaser](.goreleaser.yaml) building binaries and bumping `json-to-md.rb` in [homebrew-rajnandan](https://github.com/rajnandan1/homebrew-rajnandan).
+
+- **A leg failed?** Fix the cause, then `gh run rerun <run-id> --failed` — legs are idempotent. Never delete or re-point a published tag (the Go module proxy caches it forever); ship the next patch instead.
+- **Secrets** (repo → Settings → Actions): `NPM_TOKEN` (npm granular token, read/write on the `@rajnandan1` scope) and `PUBLISHER_TOKEN` (fine-grained PAT, Contents read/write on this repo and the tap). The PAT expires within a year — when releases start failing with 401, mint a new one and `gh secret set` it.
+- **Majors couple by design**: releasing npm `2.0.0` requires bumping the Go module path to `…/go/v2` (tags `go/v2.x.y`) in the same change.
+
 ## License
 
 MIT
