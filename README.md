@@ -39,14 +39,16 @@ CommonJS works too: `const { convertJsonText } = require("@rajnandan1/json-to-md
 
 ### Install
 
-The same package: bundle it (Vite, webpack, esbuild — it's plain ESM with no dependencies), or skip the build step and import straight from a module CDN:
+The same package: bundle it (Vite, webpack, esbuild — it's plain ESM with no dependencies), or skip the build step entirely. Every npm release is automatically on the CDNs, and the build is a single self-contained ES module, so the raw file imports directly:
 
 ```html
 <script type="module">
-  import { convertJsonText } from "https://esm.sh/@rajnandan1/json-to-md";
+  import { convertJsonText } from "https://cdn.jsdelivr.net/npm/@rajnandan1/json-to-md@1/dist/index.js";
   document.body.textContent = convertJsonText('{"hello":"world"}');
 </script>
 ```
+
+(`@1` floats on the latest 1.x; pin `@1.0.0` for exact bytes. The same path works on unpkg — `https://unpkg.com/@rajnandan1/json-to-md@1.0.0/dist/index.js` — or via esm.sh as `https://esm.sh/@rajnandan1/json-to-md`.)
 
 ### Use
 
