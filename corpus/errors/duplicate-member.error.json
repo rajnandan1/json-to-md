@@ -1,0 +1,13 @@
+{
+  "code": "DUPLICATE_MEMBER_NAME",
+  "location": {
+    "offset": 12,
+    "line": 1,
+    "column": 13
+  },
+  "firstLocation": {
+    "offset": 1,
+    "line": 1,
+    "column": 2
+  }
+}

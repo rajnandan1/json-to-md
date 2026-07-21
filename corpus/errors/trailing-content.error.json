@@ -1,0 +1,8 @@
+{
+  "code": "INVALID_JSON_SYNTAX",
+  "location": {
+    "offset": 8,
+    "line": 1,
+    "column": 9
+  }
+}
