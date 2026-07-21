@@ -1,6 +1,6 @@
 {
   "name": "@rajnandan1/json-to-md",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Convert one JSON document into deterministic, human-readable GitHub Flavored Markdown.",
   "license": "MIT",
   "repository": {
