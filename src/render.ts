@@ -24,6 +24,7 @@ type ListPart =
 type Block =
   | { kind: "heading"; level: number; text: string; detailPointer?: string; fragment?: string }
   | { kind: "text"; text: string }
+  | { kind: "hr" }
   | { kind: "table"; table: TableData }
   | { kind: "list"; parts: readonly ListPart[] };
 
@@ -80,13 +81,17 @@ function buildTableData(
           row.push({ t: "scalar", text: scalarText(value) });
         } else {
           const cellPointer = childPointer(rowPointer, col);
-          row.push({ t: "link", pointer: cellPointer, label: escapeInline(cellPointer) });
+          // The link label and the Detail Heading text must stay byte-identical.
+          const label = escapeInline(cellPointer);
+          row.push({ t: "link", pointer: cellPointer, label });
+          // A thematic break precedes every Detail Heading (and appears nowhere else).
+          details.push({ t: "emit", block: { kind: "hr" } });
           details.push({
             t: "emit",
             block: {
               kind: "heading",
               level: detailLevel,
-              text: `Detail: ${escapeInline(cellPointer)}`,
+              text: label,
               detailPointer: cellPointer,
             },
           });
@@ -276,6 +281,8 @@ export function renderDocument(root: DocNode): string {
       rendered.push(`${"#".repeat(block.level)} ${block.text}`);
     } else if (block.kind === "text") {
       rendered.push(block.text);
+    } else if (block.kind === "hr") {
+      rendered.push("---");
     } else if (block.kind === "table") {
       rendered.push(serializeTable(block.table, 0, fragments));
     } else {

@@ -46,6 +46,6 @@ describe("heading range transitions", () => {
     };
     const md = convertJsonText(JSON.stringify(value));
     expect(md).not.toContain("#######");
-    expect(md).toContain("###### Detail:");
+    expect(md).toContain("###### /l1/0/l2/0/l3/0/l4/0/l5");
   });
 });
