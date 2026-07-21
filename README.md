@@ -7,53 +7,111 @@
 
 Convert one JSON document into deterministic, human-readable [GitHub Flavored Markdown](https://github.github.com/gfm/).
 
-The same conversion core runs in the browser and in Node. Output is a readable **projection**, not a reversible serialization format — every document begins with a `# Results` heading and uses canonical spacing (LF endings, one blank line between blocks, no trailing spaces, one final newline).
+The same conversion runs in the browser, in Node, in Go, and on the command line — the TypeScript and Go implementations produce **byte-identical output**, enforced by a shared [`corpus/`](corpus/) and a cross-implementation fuzz gate in CI. Output is a readable **projection**, not a reversible serialization format — every document begins with a `# Results` heading and uses canonical spacing (LF endings, one blank line between blocks, no trailing spaces, one final newline).
 
-## Install
+## Node
+
+### Install
 
 ```sh
 npm install @rajnandan1/json-to-md      # or: pnpm add / yarn add
 ```
 
-Ships ESM and CommonJS builds with TypeScript declarations, and no runtime dependencies.
+Ships ESM and CommonJS builds with TypeScript declarations, and no runtime dependencies. Node ≥ 18.
 
-## Go
-
-The same converter ships as a Go module and a CLI with **byte-identical output** — the shared [`corpus/`](corpus/) is the contract of record, and CI fuzz-compares both implementations.
-
-```sh
-go install github.com/rajnandan1/json-to-md/go/cmd/json-to-md@latest   # CLI via Go
-brew tap rajnandan1/homebrew-rajnandan && brew install json-to-md      # CLI via Homebrew
-echo '{"hello":"world"}' | json-to-md
-```
-
-```go
-import jsontomd "github.com/rajnandan1/json-to-md/go"
-
-md, err := jsontomd.ConvertText([]byte(`{"hello":"world"}`)) // byte-identical parity surface
-md, err = jsontomd.ConvertValue(v)                           // any Go value, marshal-then-convert
-```
-
-Failures surface as `*jsontomd.Error` carrying the same codes, JSON Pointers, and UTF-16 locations as `JsonToMarkdownError`; the CLI exits 0/1/2 and can emit structured errors with `--json`.
-
-## Usage
-
-There are two entry points — one for already-parsed data, one for untrusted JSON text — plus a typed error.
+### Use
 
 ```ts
-import { convertJsonValue, convertJsonText, JsonToMarkdownError } from "@rajnandan1/json-to-md";
+import { convertJsonText, convertJsonValue } from "@rajnandan1/json-to-md";
 
-convertJsonValue({ hello: "world" });
+convertJsonText('{ "hello": "world" }');   // untrusted serialized JSON text
+convertJsonValue({ hello: "world" });      // already-parsed, caller-trusted data
 // # Results
 //
 // ## hello
 //
 // world
-
-convertJsonText('{ "hello": "world" }'); // same output, parsed from text
 ```
 
-Both functions return the complete Markdown string or throw `JsonToMarkdownError`. Calls are pure, never mutate input, share no state, and are safe to run concurrently.
+CommonJS works too: `const { convertJsonText } = require("@rajnandan1/json-to-md")`. See the [API reference](#api-reference) for the two entry points' exact contracts and errors.
+
+## Browser
+
+### Install
+
+The same package: bundle it (Vite, webpack, esbuild — it's plain ESM with no dependencies), or skip the build step and import straight from a module CDN:
+
+```html
+<script type="module">
+  import { convertJsonText } from "https://esm.sh/@rajnandan1/json-to-md";
+  document.body.textContent = convertJsonText('{"hello":"world"}');
+</script>
+```
+
+### Use
+
+Identical API to Node — the conversion core is pure and runs anywhere. A live playground lives in [`demo/`](demo/):
+
+```sh
+pnpm demo   # builds the library, then serves the page and prints a localhost URL
+```
+
+Paste JSON, watch it convert, toggle between the rendered preview and raw Markdown, and switch the input between the serialized and parsed entry points to see numeric spelling preserved or lost.
+
+## Go
+
+### Install
+
+```sh
+go get github.com/rajnandan1/json-to-md/go
+```
+
+### Use
+
+```go
+import (
+	"errors"
+
+	jsontomd "github.com/rajnandan1/json-to-md/go"
+)
+
+md, err := jsontomd.ConvertText([]byte(`{"hello":"world"}`)) // byte-identical to convertJsonText
+md, err = jsontomd.ConvertValue(v)                           // any Go value, marshal-then-convert
+
+var convErr *jsontomd.Error
+if errors.As(err, &convErr) {
+	// convErr.Code, .Pointer, .Location — same codes and UTF-16 locations as the TS errors
+}
+```
+
+`ConvertText` preserves member order and numeric lexemes exactly like `convertJsonText`. `ConvertValue` is defined as `json.Marshal(v)` piped into the same core: struct fields render in field order, map keys in sorted order, and cycles or NaN are rejected. The library packages are dependency-free.
+
+## CLI
+
+### Install
+
+```sh
+brew tap rajnandan1/homebrew-rajnandan && brew install json-to-md
+# or, via the Go toolchain:
+go install github.com/rajnandan1/json-to-md/go/cmd/json-to-md@latest
+```
+
+### Use
+
+```sh
+json-to-md data.json > out.md                       # file in, Markdown out
+curl -s https://api.example.com/items | json-to-md  # stdin (no arg, or '-')
+json-to-md --json broken.json 2> error.json         # structured errors on stderr
+json-to-md --version
+```
+
+Exit codes: `0` success, `1` conversion failed, `2` usage or I/O error. Failures print one greppable line — `json-to-md: DUPLICATE_MEMBER_NAME at 3:7 (first at 1:9): …` — or, with `--json`, the full error object (`code`, `pointer`, `location`, `firstLocation`, `message`).
+
+## API reference
+
+There are two entry points — one for already-parsed data, one for untrusted JSON text — plus a typed error. Both functions return the complete Markdown string or throw `JsonToMarkdownError`. Calls are pure, never mutate input, share no state, and are safe to run concurrently.
+
+Go mirrors these contracts one-for-one: `ConvertText` ↔ `convertJsonText` (byte-identical output), `ConvertValue` ↔ `convertJsonValue` (host-language marshaling semantics), and `*jsontomd.Error` ↔ `JsonToMarkdownError` — same codes, JSON Pointers, and UTF-16 locations (`SPARSE_ARRAY` cannot occur in Go).
 
 ### `convertJsonValue(value: unknown): string`
 
@@ -126,16 +184,6 @@ convertJsonText(JSON.stringify({
 ```
 
 There is no converter-defined input-size, nesting-depth, or table-size limit; parsing, validation, and rendering are iterative, so deeply nested documents do not overflow the stack. See [`docs/adr/`](docs/adr/) for the decisions behind numeric-lexeme preservation, duplicate-name rejection, always-tabular tables, and the no-nesting-limit guarantee, and [`CONTEXT.md`](CONTEXT.md) for the domain vocabulary.
-
-## Demo
-
-A live browser playground lives in [`demo/`](demo/):
-
-```sh
-pnpm demo   # builds the library, then serves the page and prints a localhost URL
-```
-
-Paste JSON, watch it convert, toggle between the rendered preview and raw Markdown, and switch the input between the serialized and parsed entry points to see numeric spelling preserved or lost.
 
 ## Development
 
