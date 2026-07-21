@@ -1,0 +1,43 @@
+# GoReleaser v2 — builds the CLI from the go/ subdirectory module and pushes
+# the Homebrew formula to rajnandan1/homebrew-rajnandan (tap root, beside
+# okgit.rb). Runs on v* tags via .github/workflows/release.yml.
+version: 2
+
+project_name: json-to-md
+
+builds:
+  - dir: go
+    main: ./cmd/json-to-md
+    binary: json-to-md
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w -X main.version={{ .Version }}
+
+universal_binaries:
+  - replace: true
+
+checksum:
+  name_template: checksums.txt
+
+release:
+  prerelease: auto
+
+brews:
+  - name: json-to-md
+    homepage: https://github.com/rajnandan1/json-to-md
+    description: Convert one JSON document into deterministic, human-readable GitHub Flavored Markdown
+    repository:
+      owner: rajnandan1
+      name: homebrew-rajnandan
+    commit_author:
+      name: rajnandan1
+      email: rajnandan1@gmail.com
+    test: |
+      assert_match "# Results", shell_output("echo '{}' | #{bin}/json-to-md")

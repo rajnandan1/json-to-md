@@ -1,0 +1,101 @@
+# One release ritual: `npm version X.Y.Z && git push --follow-tags`.
+# The v* tag triggers this workflow: gate on both suites + corpus + fuzz, then
+# three independent, individually re-runnable publish legs. Never unpublish;
+# fix forward with the next patch version.
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          cache-dependency-path: go/go.sum
+      - run: pnpm install --frozen-lockfile
+      - name: tag matches package.json
+        run: |
+          node -e 'const v = require("./package.json").version;
+            if (`v${v}` !== process.env.GITHUB_REF_NAME) {
+              console.error(`tag ${process.env.GITHUB_REF_NAME} != package.json v${v}`);
+              process.exit(1);
+            }'
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: test -z "$(gofmt -l go)"
+      - run: go vet ./...
+        working-directory: go
+      - run: go test ./...
+        working-directory: go
+      - run: pnpm build
+      - run: node scripts/fuzz-diff.mjs 300
+
+  npm:
+    needs: gate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # npm --provenance
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: "https://registry.npmjs.org"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  # Publishing the Go module is just the prefixed tag (go/ is a subdirectory
+  # module): go/vX.Y.Z at the same commit as vX.Y.Z.
+  go-tag:
+    needs: gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "go/${GITHUB_REF_NAME}"
+          git push origin "go/${GITHUB_REF_NAME}"
+
+  goreleaser:
+    needs: gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          cache-dependency-path: go/go.sum
+      - uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser
+          version: "~> v2"
+          args: release --clean
+        env:
+          # PAT with push access to homebrew-rajnandan (same secret okgit uses).
+          GITHUB_TOKEN: ${{ secrets.PUBLISHER_TOKEN }}

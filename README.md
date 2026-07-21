@@ -12,17 +12,36 @@ The same conversion core runs in the browser and in Node. Output is a readable *
 ## Install
 
 ```sh
-npm install json-to-md      # or: pnpm add / yarn add
+npm install @rajnandan1/json-to-md      # or: pnpm add / yarn add
 ```
 
 Ships ESM and CommonJS builds with TypeScript declarations, and no runtime dependencies.
+
+## Go
+
+The same converter ships as a Go module and a CLI with **byte-identical output** — the shared [`corpus/`](corpus/) is the contract of record, and CI fuzz-compares both implementations.
+
+```sh
+go install github.com/rajnandan1/json-to-md/go/cmd/json-to-md@latest   # CLI via Go
+brew tap rajnandan1/homebrew-rajnandan && brew install json-to-md      # CLI via Homebrew
+echo '{"hello":"world"}' | json-to-md
+```
+
+```go
+import jsontomd "github.com/rajnandan1/json-to-md/go"
+
+md, err := jsontomd.ConvertText([]byte(`{"hello":"world"}`)) // byte-identical parity surface
+md, err = jsontomd.ConvertValue(v)                           // any Go value, marshal-then-convert
+```
+
+Failures surface as `*jsontomd.Error` carrying the same codes, JSON Pointers, and UTF-16 locations as `JsonToMarkdownError`; the CLI exits 0/1/2 and can emit structured errors with `--json`.
 
 ## Usage
 
 There are two entry points — one for already-parsed data, one for untrusted JSON text — plus a typed error.
 
 ```ts
-import { convertJsonValue, convertJsonText, JsonToMarkdownError } from "json-to-md";
+import { convertJsonValue, convertJsonText, JsonToMarkdownError } from "@rajnandan1/json-to-md";
 
 convertJsonValue({ hello: "world" });
 // # Results
