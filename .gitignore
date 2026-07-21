@@ -144,3 +144,6 @@ vite.config.ts.timestamp-*
 
 # Design-hook cache
 .impeccable/
+.agents/
+.claude/
+skills-lock.json
