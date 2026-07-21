@@ -1,3 +1,8 @@
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/logo-white.svg">
+  <img src="assets/logo.svg" alt="json-to-md logo" width="96">
+</picture>
+
 # json-to-md
 
 Convert one JSON document into deterministic, human-readable [GitHub Flavored Markdown](https://github.github.com/gfm/).
