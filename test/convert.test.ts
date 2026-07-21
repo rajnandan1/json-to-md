@@ -67,17 +67,21 @@ describe("Output Document shape", () => {
 
 | age | degrees |
 | --- | --- |
-| 14 | [/table1/0/degrees](#detail-table10degrees) |
-| 24 | [/table1/1/degrees](#detail-table11degrees) |
+| 14 | [/table1/0/degrees](#table10degrees) |
+| 24 | [/table1/1/degrees](#table11degrees) |
 
-### Detail: /table1/0/degrees
+---
+
+### /table1/0/degrees
 
 | name | year |
 | --- | --- |
 | B-Degree | 2023 |
 | C-Degree | 2024 |
 
-### Detail: /table1/1/degrees
+---
+
+### /table1/1/degrees
 
 | name | year |
 | --- | --- |
@@ -178,9 +182,11 @@ describe("tabular arrays nested in lists render as indented tables (ADR-0003)", 
 -
   | x | kids |
   | --- | --- |
-  | 1 | [/outer/1/0/kids](#detail-outer10kids) |
+  | 1 | [/outer/1/0/kids](#outer10kids) |
 
-### Detail: /outer/1/0/kids
+---
+
+### /outer/1/0/kids
 
 | y |
 | --- |
@@ -198,9 +204,27 @@ describe("keys and pointers with collapsible spaces stay canonical", () => {
 
   it("keeps a space-keyed Detail pointer trailing-space-free and link-resolvable", () => {
     const md = convertJsonValue([[{ " ": [[]] }]]);
-    expect(md).toContain("[/0/0/&nbsp;](#detail-00nbsp)");
-    expect(md).toContain("## Detail: /0/0/&nbsp;");
+    expect(md).toContain("[/0/0/&nbsp;](#00nbsp)");
+    expect(md).toContain("## /0/0/&nbsp;");
     for (const line of md.split("\n")) expect(line).toBe(line.replace(/\s+$/, ""));
+  });
+});
+
+describe("thematic breaks fence Detail Sections", () => {
+  it("emits one --- immediately before every Detail Heading and nowhere else", () => {
+    const md = convertJsonValue({
+      rows: [{ a: 1, kid: [{ b: 2, grandkid: [{ c: 3 }] }] }],
+      dash: "---",
+    });
+    const lines = md.split("\n");
+    const hrIndexes = lines.flatMap((line, i) => (line === "---" ? [i] : []));
+    const detailHeadings = md.match(/^#{2,6} \//gm) ?? [];
+    expect(detailHeadings.length).toBe(2); // /rows/0/kid and its nested grandkid detail
+    expect(hrIndexes.length).toBe(detailHeadings.length);
+    for (const i of hrIndexes) {
+      expect(lines[i + 1]).toBe("");
+      expect(lines[i + 2]).toMatch(/^#{2,6} \//);
+    }
   });
 });
 

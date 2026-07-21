@@ -72,7 +72,7 @@ Conversion fails atomically at the first error in encounter order and never retu
 | Object keys | Headings H2–H6, then nested unordered lists once nesting passes H6 |
 | Array of objects (a Tabular Array) | One GFM table; also when nested inside a list |
 | Any other array | Unordered list in source order |
-| Non-empty container in a table cell | Link to a `Detail:` section addressed by JSON Pointer |
+| Non-empty container in a table cell | Link to a Detail Section headed by the value's JSON Pointer, preceded by a `---` thematic break |
 | String | Escaped literal text — never injects Markdown or HTML |
 | Whole-string absolute `http(s)` URL | Markdown link |
 | `null` / `""` / `[]` / `{}` | `` `null` `` / `` `""` `` / `` `[]` `` / `` `{}` `` (each kept distinct from a missing table cell) |
@@ -90,9 +90,11 @@ convertJsonText(JSON.stringify({
 
 | age | degrees |
 | --- | --- |
-| 14 | [/table1/0/degrees](#detail-table10degrees) |
+| 14 | [/table1/0/degrees](#table10degrees) |
 
-### Detail: /table1/0/degrees
+---
+
+### /table1/0/degrees
 
 | name | year |
 | --- | --- |

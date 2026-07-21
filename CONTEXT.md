@@ -95,7 +95,7 @@ _Avoid_: Underscore-joined path, dotted path
 The linked rendering of a non-empty object or array extracted from a table cell, identified by the value's JSON Pointer. Detail Sections follow their parent table in row-major encounter order, with each section's descendants rendered before its next sibling; empty containers remain explicit inside their cells.
 
 **Detail Heading**:
-The addressable heading `Detail: {JSON Pointer}` that introduces a Detail Section. It follows the surrounding hierarchy until H6 and remains at H6 when further nesting would otherwise exceed Markdown's heading range; the fixed prefix guarantees a non-empty Heading Fragment.
+The addressable heading whose text is the Detail Section's JSON Pointer alone, with no generated prefix. A thematic break precedes every Detail Heading — and no other position — visually separating the Detail Section from the content before it. It follows the surrounding hierarchy until H6 and remains at H6 when further nesting would otherwise exceed Markdown's heading range. Its Heading Fragment is non-empty because every Detail Section originates in a table cell, so its JSON Pointer always contains a numeric row index.
 
 **Heading Fragment**:
 The document-wide, GFM-compatible link target allocated to a heading in final output order. Collisions receive GitHub-style numeric suffixes, and Detail Section links use the fragment allocated to their Detail Heading.
@@ -198,9 +198,13 @@ The document-wide, GFM-compatible link target allocated to a heading in final ou
 >
 > **Domain expert:** Use a Detail Heading capped at H6; the H6-to-list transition applies to JSON keys, not generated navigation.
 >
+> **Developer:** How is a Detail Section separated from the content that precedes it?
+>
+> **Domain expert:** A thematic break precedes every Detail Heading; thematic breaks appear nowhere else.
+>
 > **Developer:** Can a punctuation-only JSON Pointer produce an empty link target?
 >
-> **Domain expert:** No. Prefix every Detail Heading with `Detail:` so its Heading Fragment is always non-empty.
+> **Domain expert:** No. A Detail Section always originates in a table cell, so its pointer contains a numeric row index whose digits keep the Heading Fragment non-empty.
 >
 > **Developer:** What if two headings produce the same GFM link target?
 >
