@@ -50,10 +50,13 @@ The same package: bundle it (Vite, webpack, esbuild — it's plain ESM with no d
 
 (`@1` floats on the latest 1.x; pin `@1.0.1` for exact bytes. The same path works on unpkg — `https://unpkg.com/@rajnandan1/json-to-md@1.0.1/dist/index.js` — or via esm.sh as `https://esm.sh/@rajnandan1/json-to-md`.)
 
-No modules? A classic script tag works too — the IIFE build exposes a `jsonToMd` global:
+No modules? A classic script tag works too — the IIFE build exposes a `jsonToMd` global. Pinned with [Subresource Integrity](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity) so a compromised CDN can't swap the code (the hash is per-version — update both together when bumping):
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/@rajnandan1/json-to-md@1/dist/index.global.js"></script>
+<script
+  src="https://cdn.jsdelivr.net/npm/@rajnandan1/json-to-md@1.0.1/dist/index.global.js"
+  integrity="sha384-v5+v71wtLTKJo2nT4Ly2Ov4u1QDPPPC0fhwy1q9I8lqsEtDOIuH/4AIwyt9lRQmR"
+  crossorigin="anonymous"></script>
 <script>
   document.body.textContent = jsonToMd.convertJsonText('{"hello":"world"}');
 </script>
