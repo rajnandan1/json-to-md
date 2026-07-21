@@ -48,7 +48,16 @@ The same package: bundle it (Vite, webpack, esbuild — it's plain ESM with no d
 </script>
 ```
 
-(`@1` floats on the latest 1.x; pin `@1.0.0` for exact bytes. The same path works on unpkg — `https://unpkg.com/@rajnandan1/json-to-md@1.0.0/dist/index.js` — or via esm.sh as `https://esm.sh/@rajnandan1/json-to-md`.)
+(`@1` floats on the latest 1.x; pin `@1.0.1` for exact bytes. The same path works on unpkg — `https://unpkg.com/@rajnandan1/json-to-md@1.0.1/dist/index.js` — or via esm.sh as `https://esm.sh/@rajnandan1/json-to-md`.)
+
+No modules? A classic script tag works too — the IIFE build exposes a `jsonToMd` global:
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/@rajnandan1/json-to-md@1/dist/index.global.js"></script>
+<script>
+  document.body.textContent = jsonToMd.convertJsonText('{"hello":"world"}');
+</script>
+```
 
 ### Use
 
