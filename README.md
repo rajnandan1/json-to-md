@@ -12,7 +12,7 @@ The same conversion core runs in the browser and in Node. Output is a readable *
 ## Install
 
 ```sh
-npm install json-to-md      # or: pnpm add / yarn add
+npm install @rajnandan1/json-to-md      # or: pnpm add / yarn add
 ```
 
 Ships ESM and CommonJS builds with TypeScript declarations, and no runtime dependencies.
@@ -41,7 +41,7 @@ Failures surface as `*jsontomd.Error` carrying the same codes, JSON Pointers, an
 There are two entry points — one for already-parsed data, one for untrusted JSON text — plus a typed error.
 
 ```ts
-import { convertJsonValue, convertJsonText, JsonToMarkdownError } from "json-to-md";
+import { convertJsonValue, convertJsonText, JsonToMarkdownError } from "@rajnandan1/json-to-md";
 
 convertJsonValue({ hello: "world" });
 // # Results
