@@ -32,7 +32,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "bench": "vitest bench --run",
-    "demo": "pnpm build && vite demo"
+    "demo": "vite demo"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
