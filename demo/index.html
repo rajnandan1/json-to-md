@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta
             name="description"
-            content="Paste JSON, get deterministic GitHub Flavored Markdown. Live playground for json-to-md — zero dependencies, byte-identical output from TypeScript, Go, and the CLI."
+            content="Paste JSON, get deterministic GitHub Flavored Markdown. Live playground for json-to-md. Zero dependencies, byte-identical output from TypeScript, Go, and the CLI."
         />
         <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
         <link rel="canonical" href="https://json-to-md.rajnandan.com/" />
@@ -439,7 +439,7 @@
                             id="mode-parsed"
                             class="button is-small"
                             aria-pressed="false"
-                            title="JSON.parse first, then convert the parsed value — numeric spelling is lost (1.00 becomes 1)"
+                            title="Runs JSON.parse first, then converts the value, so numbers lose their spelling (1.00 becomes 1)"
                         >
                             convertJsonValue
                         </button>
@@ -495,8 +495,7 @@
         <footer class="site-foot">
             <span>MIT License</span>
             <span
-                >Fully static — loads the released build straight from
-                jsDelivr</span
+                >Static page that loads the released build from jsDelivr</span
             >
             <a href="https://rajnandan.com" target="_blank" rel="noopener"
                 >Built by Raj Nandan Sharma</a
