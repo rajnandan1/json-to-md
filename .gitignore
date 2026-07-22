@@ -148,6 +148,7 @@ vite.config.ts.timestamp-*
 .claude/
 .scratch/
 skills-lock.json
+.DS_Store
 
 # Project-local context/docs
 CONTEXT.md
