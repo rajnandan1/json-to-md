@@ -3,144 +3,211 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta
+            name="description"
+            content="Paste JSON, get deterministic GitHub Flavored Markdown. Live playground for json-to-md — zero dependencies, byte-identical output from TypeScript, Go, and the CLI."
+        />
         <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
-        <title>json-to-md · live demo</title>
+        <link rel="canonical" href="https://json-to-md.rajnandan.com/" />
+        <title>json-to-md — JSON to Markdown, live</title>
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css"
+            integrity="sha384-DCY3M8xLkMu6c9IKcKbe+jHKMjelnwC0p+SBaxfHxoBYZWdJF2X400UdBCgATtAB"
+            crossorigin="anonymous"
+        />
         <style>
+            /* ---- Theme: amber on pure neutrals, both modes derived by Bulma ---- */
             :root {
-                color-scheme: light dark;
-                --bg: #ffffff;
-                --panel: #f6f8fa;
-                --border: #d0d7de;
-                --text: #1f2328;
-                --muted: #656d76;
-                --accent: #0969da;
-                --danger: #cf222e;
-                --danger-bg: #ffebe9;
-                --code-bg: #f6f8fa;
-                --mono:
-                    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+                --bulma-scheme-h: 36;
+                --bulma-scheme-s: 6%;
+                --bulma-primary-h: 36deg;
+                --bulma-primary-s: 100%;
+                --bulma-primary-l: 25%;
+                --bulma-link-h: 36deg;
+                --bulma-link-s: 100%;
+                --bulma-link-l: 25%;
+                --bulma-link-on-scheme-l: 27%;
+                --bulma-family-primary:
+                    system-ui, -apple-system, "Segoe UI", Roboto,
+                    "Helvetica Neue", Arial, sans-serif;
+                --bulma-family-code:
+                    ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas,
                     monospace;
-                --sans:
-                    -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica,
-                    Arial, sans-serif;
+                --bulma-radius: 6px;
+                --bulma-radius-small: 4px;
+                --amber-mid: hsl(36deg 79% 38%);
+                --pane-pad: clamp(0.85rem, 2vw, 1.4rem);
             }
             @media (prefers-color-scheme: dark) {
                 :root {
-                    --bg: #0d1117;
-                    --panel: #161b22;
-                    --border: #30363d;
-                    --text: #e6edf3;
-                    --muted: #8b949e;
-                    --accent: #4493f8;
-                    --danger: #ff7b72;
-                    --danger-bg: #2d1214;
-                    --code-bg: #161b22;
+                    --bulma-primary-h: 33deg;
+                    --bulma-primary-s: 68%;
+                    --bulma-primary-l: 60%;
+                    --bulma-primary-invert-l: 10%;
+                    --bulma-link-h: 33deg;
+                    --bulma-link-s: 68%;
+                    --bulma-link-l: 60%;
+                    --bulma-link-invert-l: 10%;
+                    --bulma-link-on-scheme-l: 63%;
                 }
             }
-            * {
-                box-sizing: border-box;
+            ::selection {
+                background: hsl(36deg 79% 38% / 0.28);
+            }
+
+            /* ---- App shell ---- */
+            html,
+            body {
+                height: 100%;
             }
             body {
-                margin: 0;
-                font-family: var(--sans);
-                background: var(--bg);
-                color: var(--text);
-                line-height: 1.5;
+                display: flex;
+                flex-direction: column;
+                min-height: 100dvh;
             }
-            header {
-                padding: 1.25rem clamp(1rem, 4vw, 2.5rem) 1rem;
-                border-bottom: 1px solid var(--border);
+            .site-head {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: flex-start;
+                justify-content: space-between;
+                gap: 1rem 2.5rem;
+                padding: 1.1rem clamp(1rem, 3vw, 2rem) 1rem;
+                border-bottom: 1px solid var(--bulma-border);
+            }
+            .brand {
+                display: flex;
+                align-items: flex-start;
+                gap: 0.85rem;
+                min-width: 18rem;
+                flex: 1;
+            }
+            .brand-mark {
+                width: 46px;
+                height: 46px;
+                flex: none;
+                color: var(--amber-mid);
+            }
+            .brand-name {
+                font-family: var(--bulma-family-code);
+                font-size: 1.3rem;
+                font-weight: 700;
+                letter-spacing: -0.01em;
+                color: var(--bulma-text-strong);
+                line-height: 1.2;
+            }
+            .brand-tag {
+                margin-top: 0.25rem;
+                font-size: 0.9rem;
+                color: var(--bulma-text);
+                max-width: 58ch;
+                text-wrap: pretty;
+            }
+            .head-side {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-end;
+                gap: 0.5rem;
+            }
+            .install {
+                display: flex;
+                align-items: stretch;
+            }
+            .install code {
                 display: flex;
                 align-items: center;
-                gap: 1rem;
-                flex-wrap: wrap;
-            }
-            header picture img {
-                display: block;
-            }
-            .head-text {
-                flex: 1;
-                min-width: 16rem;
-            }
-            .credit {
+                background: var(--bulma-scheme-main-bis);
+                border: 1px solid var(--bulma-border);
+                border-right: 0;
+                border-radius: var(--bulma-radius) 0 0 var(--bulma-radius);
+                padding: 0.3rem 0.7rem;
                 font-size: 0.78rem;
-                color: var(--muted);
-                text-decoration: none;
+                color: var(--bulma-text-strong);
                 white-space: nowrap;
             }
-            .credit:hover {
-                color: var(--accent);
-                text-decoration: underline;
+            .install .button {
+                border-radius: 0 var(--bulma-radius) var(--bulma-radius) 0;
             }
-            header h1 {
-                margin: 0;
-                font-size: 1.4rem;
+            .head-links {
+                display: flex;
+                gap: 1rem;
+                font-size: 0.8rem;
             }
-            header h1 code {
-                font-family: var(--mono);
-                color: var(--accent);
-            }
-            header p {
-                margin: 0.35rem 0 0;
-                color: var(--muted);
-                font-size: 0.9rem;
-                max-width: 60ch;
-            }
-            main {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 1px;
-                background: var(--border);
-                min-height: calc(100vh - 92px);
-            }
-            @media (max-width: 820px) {
-                main {
-                    grid-template-columns: 1fr;
+            @media (max-width: 700px) {
+                .head-side {
+                    align-items: flex-start;
                 }
             }
+
+            /* ---- Workbench ---- */
+            .workbench {
+                flex: 1;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                min-height: 0;
+            }
             .pane {
-                background: var(--bg);
                 display: flex;
                 flex-direction: column;
                 min-width: 0;
+                min-height: 0;
             }
-            .pane-head {
+            .pane + .pane {
+                border-left: 1px solid var(--bulma-border);
+            }
+            /* Stacked layout: give up the fixed app shell and scroll the page */
+            @media (max-width: 900px) {
+                html,
+                body {
+                    height: auto;
+                }
+                .workbench {
+                    grid-template-columns: 1fr;
+                }
+                .pane + .pane {
+                    border-left: 0;
+                    border-top: 1px solid var(--bulma-border);
+                }
+                textarea.editor {
+                    min-height: 42vh;
+                }
+                .output {
+                    overflow: visible;
+                }
+            }
+            .pane-bar {
                 display: flex;
                 align-items: center;
-                justify-content: space-between;
-                gap: 0.5rem;
-                padding: 0.6rem clamp(0.75rem, 2vw, 1.25rem);
-                border-bottom: 1px solid var(--border);
-                background: var(--panel);
                 flex-wrap: wrap;
+                gap: 0.5rem 0.9rem;
+                padding: 0.55rem var(--pane-pad);
+                border-bottom: 1px solid var(--bulma-border);
+                background: var(--bulma-scheme-main-bis);
             }
-            .pane-head strong {
-                font-size: 0.8rem;
+            .pane-title {
+                font-family: var(--bulma-family-code);
+                font-size: 0.72rem;
+                font-weight: 600;
+                letter-spacing: 0.08em;
                 text-transform: uppercase;
-                letter-spacing: 0.04em;
-                color: var(--muted);
+                color: var(--bulma-text-weak);
             }
-            .pane-subhead {
+            .pane-sub {
                 display: flex;
                 align-items: center;
-                gap: 0.5rem 0.75rem;
                 flex-wrap: wrap;
-                padding: 0.5rem clamp(0.75rem, 2vw, 1.25rem);
-                border-bottom: 1px solid var(--border);
+                gap: 0.4rem 0.9rem;
+                padding: 0.5rem var(--pane-pad);
+                border-bottom: 1px solid var(--bulma-border);
             }
             .hint {
-                font-size: 0.76rem;
-                color: var(--muted);
+                font-size: 0.78rem;
+                color: var(--bulma-text-weak);
             }
             .hint code {
-                font-family: var(--mono);
-                color: var(--accent);
-            }
-            .actions {
-                display: flex;
-                align-items: center;
-                gap: 0.5rem;
-                flex-wrap: wrap;
+                background: none;
+                padding: 0;
+                color: var(--bulma-link-text);
             }
             .examples {
                 display: flex;
@@ -148,121 +215,106 @@
                 gap: 0.35rem;
                 margin-left: auto;
             }
-            button {
-                font: inherit;
-                font-size: 0.78rem;
-                padding: 0.25rem 0.6rem;
-                border: 1px solid var(--border);
-                border-radius: 6px;
-                background: var(--bg);
-                color: var(--text);
-                cursor: pointer;
+
+            /* Segmented controls: Bulma buttons.has-addons without its margins */
+            .seg {
+                display: flex;
             }
-            button:hover {
-                border-color: var(--accent);
-                color: var(--accent);
+            .seg .button {
+                margin: 0;
+                font-family: var(--bulma-family-code);
+                font-size: 0.72rem;
             }
-            button[aria-pressed="true"] {
-                background: var(--accent);
-                color: #fff;
-                border-color: var(--accent);
+            .seg .button:not(:last-child) {
+                border-start-end-radius: 0;
+                border-end-end-radius: 0;
             }
-            textarea {
+            .seg .button:not(:first-child) {
+                border-start-start-radius: 0;
+                border-end-start-radius: 0;
+                margin-inline-start: -1px;
+            }
+            .actions {
+                margin-left: auto;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+            .status {
+                font-family: var(--bulma-family-code);
+                font-size: 0.72rem;
+                font-variant-numeric: tabular-nums;
+                color: var(--bulma-text-weak);
+            }
+
+            /* ---- Editor ---- */
+            textarea.editor {
                 flex: 1;
                 width: 100%;
                 border: 0;
                 resize: none;
-                padding: clamp(0.75rem, 2vw, 1.25rem);
-                font-family: var(--mono);
-                font-size: 0.86rem;
-                line-height: 1.55;
-                background: var(--bg);
-                color: var(--text);
+                padding: var(--pane-pad);
+                font-family: var(--bulma-family-code);
+                font-size: 0.85rem;
+                line-height: 1.6;
+                background: var(--bulma-scheme-main);
+                color: var(--bulma-text-strong);
                 tab-size: 2;
             }
-            textarea:focus {
+            textarea.editor:focus {
                 outline: none;
             }
+            textarea.editor::placeholder {
+                color: var(--bulma-text-weak);
+            }
+
+            /* ---- Output ---- */
             .output {
                 flex: 1;
                 overflow: auto;
-                padding: clamp(0.75rem, 2vw, 1.5rem);
+                padding: var(--pane-pad);
             }
-            .toggle {
-                display: flex;
-                gap: 0.25rem;
+            .output .content h1,
+            .output .content h2 {
+                border-bottom: 1px solid var(--bulma-border);
+                padding-bottom: 0.3em;
             }
-            .error {
+            .output .content table {
+                display: block;
+                max-width: 100%;
+                overflow-x: auto;
+                width: fit-content;
+            }
+            pre.md-source {
                 margin: 0;
-                padding: 0.75rem 1rem;
-                border: 1px solid var(--danger);
-                background: var(--danger-bg);
-                color: var(--danger);
-                border-radius: 8px;
-                font-family: var(--mono);
+                padding: 0;
+                background: none;
                 font-size: 0.82rem;
-                white-space: pre-wrap;
-            }
-            pre.source {
-                margin: 0;
-                font-family: var(--mono);
-                font-size: 0.82rem;
+                line-height: 1.6;
                 white-space: pre-wrap;
                 word-break: break-word;
+                color: var(--bulma-text-strong);
             }
-            /* Rendered-markdown preview styles */
-            .preview :first-child {
-                margin-top: 0;
+            .placeholder {
+                color: var(--bulma-text-weak);
+                font-size: 0.9rem;
+                max-width: 40ch;
             }
-            .preview h1 {
-                font-size: 2rem;
-                border-bottom: 1px solid var(--border);
-                padding-bottom: 0.3rem;
+            .error-msg .message-body {
+                font-family: var(--bulma-family-code);
+                font-size: 0.8rem;
+                white-space: pre-wrap;
             }
-            .preview h2 {
-                font-size: 1.5rem;
-                border-bottom: 1px solid var(--border);
-                padding-bottom: 0.3rem;
-            }
-            .preview h3 {
-                font-size: 1.25rem;
-            }
-            .preview h4 {
-                font-size: 1rem;
-            }
-            .preview h5 {
-                font-size: 0.875rem;
-            }
-            .preview h6 {
-                font-size: 0.85rem;
-                color: var(--muted);
-            }
-            .preview code {
-                font-family: var(--mono);
-                background: var(--code-bg);
-                padding: 0.15em 0.35em;
-                border-radius: 5px;
-                font-size: 0.88em;
-            }
-            .preview a {
-                color: var(--accent);
-            }
-            .preview table {
-                border-collapse: collapse;
-                margin: 0.5rem 0;
-                display: block;
-                overflow-x: auto;
-            }
-            .preview th,
-            .preview td {
-                border: 1px solid var(--border);
-                padding: 0.35rem 0.7rem;
-            }
-            .preview th {
-                background: var(--panel);
-            }
-            .preview ul {
-                padding-left: 1.3rem;
+
+            /* ---- Footer ---- */
+            .site-foot {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.3rem 1.5rem;
+                padding: 0.7rem clamp(1rem, 3vw, 2rem);
+                border-top: 1px solid var(--bulma-border);
+                font-size: 0.76rem;
+                color: var(--bulma-text-weak);
             }
         </style>
         <script
@@ -282,91 +334,174 @@
         </script>
     </head>
     <body>
-        <header>
-            <picture>
-                <source
-                    media="(prefers-color-scheme: dark)"
-                    srcset="./logo-white.svg"
-                />
-                <img
-                    src="./logo.svg"
-                    alt="json-to-md logo"
-                    width="42"
-                    height="42"
-                />
-            </picture>
-            <div class="head-text">
-                <h1><code>json-to-md</code> · live demo</h1>
-                <p>
-                    Paste any JSON on the left. It is converted with
-                    <code>convertJsonText</code> into deterministic GitHub
-                    Flavored Markdown, shown rendered (or as raw source) on the
-                    right.
-                </p>
+        <header class="site-head">
+            <div class="brand">
+                <svg
+                    class="brand-mark"
+                    viewBox="0 0 100 100"
+                    aria-hidden="true"
+                >
+                    <g stroke="currentColor" fill="none" stroke-linecap="round">
+                        <path
+                            d="M 40 20 Q 28 20 28 32 L 28 41 Q 28 48 22 50 Q 28 52 28 59 L 28 68 Q 28 80 40 80"
+                            stroke-width="5.5"
+                        />
+                        <line
+                            x1="48"
+                            y1="31"
+                            x2="68"
+                            y2="31"
+                            stroke-width="5.5"
+                        />
+                        <line
+                            x1="48"
+                            y1="44"
+                            x2="78"
+                            y2="44"
+                            stroke-width="3.5"
+                        />
+                        <line
+                            x1="48"
+                            y1="56"
+                            x2="74"
+                            y2="56"
+                            stroke-width="3.5"
+                        />
+                        <line
+                            x1="48"
+                            y1="68"
+                            x2="64"
+                            y2="68"
+                            stroke-width="3.5"
+                        />
+                    </g>
+                </svg>
+                <div>
+                    <h1 class="brand-name">json-to-md</h1>
+                    <p class="brand-tag">
+                        Paste a JSON document, read it back as deterministic
+                        GitHub Flavored Markdown. Zero dependencies,
+                        byte-identical output from TypeScript, Go, and the CLI.
+                    </p>
+                </div>
             </div>
-            <a
-                class="credit"
-                href="https://rajnandan.com"
-                target="_blank"
-                rel="noopener"
-                >Built by Raj Nandan Sharma</a
-            >
+            <div class="head-side">
+                <div class="install">
+                    <code id="install-cmd">npm i @rajnandan1/json-to-md</code>
+                    <button
+                        class="button is-small"
+                        id="copy-install"
+                        title="Copy the install command"
+                    >
+                        Copy
+                    </button>
+                </div>
+                <nav class="head-links" aria-label="Project links">
+                    <a
+                        href="https://github.com/rajnandan1/json-to-md"
+                        target="_blank"
+                        rel="noopener"
+                        >GitHub</a
+                    >
+                    <a
+                        href="https://www.npmjs.com/package/@rajnandan1/json-to-md"
+                        target="_blank"
+                        rel="noopener"
+                        >npm</a
+                    >
+                    <a
+                        href="https://pkg.go.dev/github.com/rajnandan1/json-to-md/go"
+                        target="_blank"
+                        rel="noopener"
+                        >Go</a
+                    >
+                </nav>
+            </div>
         </header>
-        <main>
-            <section class="pane">
-                <div class="pane-head">
-                    <strong>JSON input</strong>
-                    <div class="toggle" id="input-mode">
+        <main class="workbench">
+            <section class="pane pane-input" aria-label="JSON input">
+                <div class="pane-bar">
+                    <h2 class="pane-title">JSON</h2>
+                    <div
+                        class="seg"
+                        role="group"
+                        aria-label="Library entry point"
+                    >
                         <button
                             id="mode-serialized"
+                            class="button is-small"
                             aria-pressed="true"
-                            title="convertJsonText — parse the raw text, preserving each number's exact spelling (e.g. 1.00)"
+                            title="Parses the raw text and preserves each number's exact spelling (1.00 stays 1.00)"
                         >
-                            Serialized
+                            convertJsonText
                         </button>
                         <button
                             id="mode-parsed"
+                            class="button is-small"
                             aria-pressed="false"
-                            title="convertJsonValue — JSON.parse first, then convert the parsed value (numeric spelling is lost)"
+                            title="JSON.parse first, then convert the parsed value — numeric spelling is lost (1.00 becomes 1)"
                         >
-                            Parsed
+                            convertJsonValue
                         </button>
                     </div>
                 </div>
-                <div class="pane-subhead">
+                <div class="pane-sub">
                     <span class="hint" id="input-hint"></span>
                     <div class="examples" id="examples"></div>
                 </div>
                 <textarea
                     id="input"
+                    class="editor"
                     spellcheck="false"
                     autocapitalize="off"
                     autocomplete="off"
+                    aria-label="JSON input"
+                    placeholder='{ "paste": "your JSON here" }'
                 ></textarea>
             </section>
-            <section class="pane">
-                <div class="pane-head">
-                    <strong>Output</strong>
+            <section class="pane pane-output" aria-label="Markdown output">
+                <div class="pane-bar">
+                    <h2 class="pane-title">Markdown</h2>
+                    <span class="status" id="status"></span>
                     <div class="actions">
-                        <button
-                            id="copy"
-                            title="Copy the Markdown source to the clipboard"
-                        >
-                            Copy Markdown
-                        </button>
-                        <div class="toggle">
-                            <button id="mode-preview" aria-pressed="true">
+                        <div class="seg" role="group" aria-label="Output view">
+                            <button
+                                id="mode-preview"
+                                class="button is-small"
+                                aria-pressed="true"
+                            >
                                 Preview
                             </button>
-                            <button id="mode-source" aria-pressed="false">
-                                Markdown
+                            <button
+                                id="mode-source"
+                                class="button is-small"
+                                aria-pressed="false"
+                            >
+                                Source
                             </button>
                         </div>
+                        <button
+                            id="copy"
+                            class="button is-small"
+                            title="Copy the Markdown source to the clipboard"
+                        >
+                            Copy
+                        </button>
                     </div>
                 </div>
                 <div class="output" id="output"></div>
             </section>
         </main>
+        <footer class="site-foot">
+            <span>MIT License</span>
+            <span
+                >Fully static — loads the released build straight from
+                jsDelivr</span
+            >
+            <a href="https://rajnandan.com" target="_blank" rel="noopener"
+                >Built by Raj Nandan Sharma</a
+            >
+        </footer>
         <script type="module" src="./main.js"></script>
     </body>
 </html>
