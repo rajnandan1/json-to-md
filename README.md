@@ -9,6 +9,32 @@ Convert one JSON document into deterministic, human-readable [GitHub Flavored Ma
 
 The same conversion runs in the browser, in Node, in Go, and on the command line. The TypeScript and Go implementations produce **byte-identical output**, enforced by a shared [`corpus/`](corpus/) and a cross-implementation fuzz gate in CI. Output is a readable **projection** rather than a reversible serialization format. Every document begins with a `# Results` heading and uses canonical spacing: LF endings, one blank line between blocks, no trailing spaces, one final newline.
 
+## Why JSON to MD matters for LLMs
+
+If you feed JSON into an LLM, you pay for its punctuation. Every `{`, `}`, `"`,
+`:`, and `,` is tokens spent on structure the model does not need to read the
+data. Converting the same document to Markdown headings and lists is measurably
+cheaper and easier for models to follow:
+
+- **Fewer tokens.** A [tiktoken measurement][md-tokens] of one real document
+  came out to 13,869 tokens as JSON versus 11,612 as Markdown — about 16% less.
+  Reports in the wild put the JSON tax anywhere from [15–20%][md-reddit] up to 2x
+  depending on how nested and quote-heavy the data is.
+- **Native format.** Markdown is the lingua franca of LLM training corpora, so
+  it tends to tokenize efficiently and models parse its structure reliably.
+- **Human-readable in the loop.** Prompts, agent memory logs, and RAG context
+  are easier to read, diff, and hand-edit as Markdown than as escaped JSON — and
+  Markdown chunks concatenate cleanly, where stringified JSON does not.
+- **Fits tighter context windows.** In IDE assistants and agent loops where
+  context is aggressively trimmed, token-heavy JSON is a real risk; a leaner
+  projection leaves more room for the actual task.
+
+The tradeoff: this is a one-way, human-facing **projection**, not a reversible
+serialization. When a downstream step must parse, validate, or store the data,
+keep the JSON. A common pattern is JSON for the machine contract and Markdown
+for everything a model or a person has to read.
+
+
 ## Node
 
 ### Install
