@@ -91,7 +91,7 @@ No modules? A classic script tag works too; the IIFE build exposes a `jsonToMd` 
 
 ### Use
 
-Identical API to Node; the conversion core is pure and runs anywhere. A live playground lives in [`demo/`](demo/), a fully static page that loads the released library from the CDN, so any static file server works:
+Identical API to Node; the conversion core is pure and runs anywhere. A live playground lives in [`demo/`](https://json-to-md.rajnandan.com/demo/), a fully static page that loads the released library from the CDN, so any static file server works:
 
 ```sh
 pnpm demo   # serves it via vite and prints a localhost URL
@@ -228,7 +228,7 @@ convertJsonText(
 | B-Degree | 2023 |
 ```
 
-There is no converter-defined input-size, nesting-depth, or table-size limit; parsing, validation, and rendering are iterative, so deeply nested documents do not overflow the stack. See [`docs/adr/`](docs/adr/) for the decisions behind numeric-lexeme preservation, duplicate-name rejection, always-tabular tables, and the no-nesting-limit guarantee, and [`CONTEXT.md`](CONTEXT.md) for the domain vocabulary.
+There is no converter-defined input-size, nesting-depth, or table-size limit; parsing, validation, and rendering are iterative, so deeply nested documents do not overflow the stack.
 
 ## Benchmarks
 
@@ -255,22 +255,6 @@ pnpm typecheck   # tsc --noEmit
 pnpm test        # vitest run
 pnpm bench       # 10 MiB conversion benchmarks
 ```
-
-## Releasing
-
-One version ships everywhere from one pushed tag: npm (`@rajnandan1/json-to-md`), the Go module (via the `go/vX.Y.Z` tag), and the Homebrew tap.
-
-```sh
-git checkout main && git pull
-npm version patch      # or minor / major, or an explicit version
-git push --follow-tags
-```
-
-The `v*` tag triggers [`release.yml`](.github/workflows/release.yml): a gate first (both test suites, the shared [`corpus/`](corpus/), the cross-implementation fuzz differ, and a tag↔package.json check), then three independent publish legs: npm publish with provenance, the `go/vX.Y.Z` module tag, and [GoReleaser](.goreleaser.yaml) building binaries and bumping `json-to-md.rb` in [homebrew-rajnandan](https://github.com/rajnandan1/homebrew-rajnandan).
-
-- **A leg failed?** Fix the cause, then `gh run rerun <run-id> --failed`; legs are idempotent. Never delete or re-point a published tag (the Go module proxy caches it forever); ship the next patch instead.
-- **Secrets** (repo → Settings → Actions): `NPM_TOKEN` (npm granular token, read/write on the `@rajnandan1` scope) and `PUBLISHER_TOKEN` (fine-grained PAT, Contents read/write on this repo and the tap). The PAT expires within a year; when releases start failing with 401, mint a new one and `gh secret set` it.
-- **Majors couple by design**: releasing npm `2.0.0` requires bumping the Go module path to `…/go/v2` (tags `go/v2.x.y`) in the same change.
 
 ## License
 
