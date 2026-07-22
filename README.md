@@ -105,7 +105,9 @@ if errors.As(err, &convErr) {
 ### Install
 
 ```sh
-brew tap rajnandan1/homebrew-rajnandan && brew install json-to-md
+brew tap rajnandan1/homebrew-rajnandan
+brew trust rajnandan1/rajnandan     # once per machine — newer Homebrew gates third-party taps
+brew install json-to-md
 # or, via the Go toolchain:
 go install github.com/rajnandan1/json-to-md/go/cmd/json-to-md@latest
 ```
