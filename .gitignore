@@ -146,4 +146,9 @@ vite.config.ts.timestamp-*
 .impeccable/
 .agents/
 .claude/
+.scratch/
 skills-lock.json
+
+# Project-local context/docs
+CONTEXT.md
+docs/adr/
