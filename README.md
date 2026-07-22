@@ -64,10 +64,10 @@ No modules? A classic script tag works too — the IIFE build exposes a `jsonToM
 
 ### Use
 
-Identical API to Node — the conversion core is pure and runs anywhere. A live playground lives in [`demo/`](demo/):
+Identical API to Node — the conversion core is pure and runs anywhere. A live playground lives in [`demo/`](demo/) — a fully static page that loads the released library from the CDN, so any static file server works:
 
 ```sh
-pnpm demo   # builds the library, then serves the page and prints a localhost URL
+pnpm demo   # serves it via vite and prints a localhost URL
 ```
 
 Paste JSON, watch it convert, toggle between the rendered preview and raw Markdown, and switch the input between the serialized and parsed entry points to see numeric spelling preserved or lost.

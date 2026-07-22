@@ -1,21 +1,27 @@
-import { marked } from "marked";
-import { convertJsonText, convertJsonValue, JsonToMarkdownError } from "../dist/index.js";
+// Loads the released library and marked straight from the CDN, so the demo
+// runs from any static file server — no build step, no dist/, no node_modules.
+// To demo uncommitted local changes instead: run `pnpm build`, then
+// temporarily import "../dist/index.js" here.
+import { marked } from "https://cdn.jsdelivr.net/npm/marked@15/+esm";
+import {
+  convertJsonText,
+  convertJsonValue,
+  JsonToMarkdownError,
+} from "https://cdn.jsdelivr.net/npm/@rajnandan1/json-to-md@1/dist/index.js";
 
-const input = document.getElementById("input") as HTMLTextAreaElement;
-const output = document.getElementById("output") as HTMLDivElement;
-const examplesBar = document.getElementById("examples") as HTMLDivElement;
-const inputHint = document.getElementById("input-hint") as HTMLSpanElement;
-const btnSerialized = document.getElementById("mode-serialized") as HTMLButtonElement;
-const btnParsed = document.getElementById("mode-parsed") as HTMLButtonElement;
-const btnPreview = document.getElementById("mode-preview") as HTMLButtonElement;
-const btnSource = document.getElementById("mode-source") as HTMLButtonElement;
-const btnCopy = document.getElementById("copy") as HTMLButtonElement;
+const input = document.getElementById("input");
+const output = document.getElementById("output");
+const examplesBar = document.getElementById("examples");
+const inputHint = document.getElementById("input-hint");
+const btnSerialized = document.getElementById("mode-serialized");
+const btnParsed = document.getElementById("mode-parsed");
+const btnPreview = document.getElementById("mode-preview");
+const btnSource = document.getElementById("mode-source");
+const btnCopy = document.getElementById("copy");
 
 marked.setOptions({ gfm: true, breaks: false });
 
-type Example = { label: string; json: unknown };
-
-const examples: Example[] = [
+const examples = [
   {
     label: "Table",
     json: {
@@ -37,8 +43,8 @@ const examples: Example[] = [
   { label: "Duplicate keys (error)", json: '{"name":"first","name":"second"}' },
 ];
 
-let outputMode: "preview" | "source" = "preview";
-let inputMode: "serialized" | "parsed" = "serialized";
+let outputMode = "preview";
+let inputMode = "serialized";
 let lastMarkdown = "";
 
 const HINTS = {
@@ -46,21 +52,21 @@ const HINTS = {
   parsed: "<code>convertJsonValue(JSON.parse(source))</code> — converts the parsed value; numeric spelling is lost.",
 };
 
-function convert(source: string): string {
+function convert(source) {
   if (inputMode === "serialized") return convertJsonText(source);
   // Parsed path: JSON.parse here stands in for a caller passing already-parsed data.
-  let value: unknown;
+  let value;
   try {
     value = JSON.parse(source);
   } catch (error) {
-    throw new JsonToMarkdownError("INVALID_JSON_SYNTAX", `JSON.parse failed: ${(error as Error).message}`);
+    throw new JsonToMarkdownError("INVALID_JSON_SYNTAX", `JSON.parse failed: ${error.message}`);
   }
   return convertJsonValue(value);
 }
 
-function render(): void {
+function render() {
   output.replaceChildren();
-  let markdown: string;
+  let markdown;
   try {
     markdown = convert(input.value);
   } catch (error) {
@@ -85,11 +91,11 @@ function render(): void {
   article.className = "preview";
   // Safe to inject: the converter escapes every GFM/HTML metacharacter in string
   // values, so the Markdown it emits carries no author-controlled HTML.
-  article.innerHTML = marked.parse(markdown) as string;
+  article.innerHTML = marked.parse(markdown);
   output.appendChild(article);
 }
 
-function errorBox(error: JsonToMarkdownError): HTMLElement {
+function errorBox(error) {
   const box = document.createElement("p");
   box.className = "error";
   const parts = [`${error.code}: ${error.message}`];
@@ -99,14 +105,14 @@ function errorBox(error: JsonToMarkdownError): HTMLElement {
   return box;
 }
 
-function setOutputMode(next: "preview" | "source"): void {
+function setOutputMode(next) {
   outputMode = next;
   btnPreview.setAttribute("aria-pressed", String(next === "preview"));
   btnSource.setAttribute("aria-pressed", String(next === "source"));
   render();
 }
 
-function setInputMode(next: "serialized" | "parsed"): void {
+function setInputMode(next) {
   inputMode = next;
   btnSerialized.setAttribute("aria-pressed", String(next === "serialized"));
   btnParsed.setAttribute("aria-pressed", String(next === "parsed"));
@@ -143,5 +149,5 @@ btnCopy.addEventListener("click", async () => {
 
 // Seed with the first example.
 inputHint.innerHTML = HINTS.serialized;
-input.value = JSON.stringify(examples[0]!.json, null, 2);
+input.value = JSON.stringify(examples[0].json, null, 2);
 render();
