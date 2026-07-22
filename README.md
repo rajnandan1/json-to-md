@@ -201,6 +201,23 @@ convertJsonText(JSON.stringify({
 
 There is no converter-defined input-size, nesting-depth, or table-size limit; parsing, validation, and rendering are iterative, so deeply nested documents do not overflow the stack. See [`docs/adr/`](docs/adr/) for the decisions behind numeric-lexeme preservation, duplicate-name rejection, always-tabular tables, and the no-nesting-limit guarantee, and [`CONTEXT.md`](CONTEXT.md) for the domain vocabulary.
 
+## Benchmarks
+
+Measured on Stripe's OpenAPI spec (`spec3.json`: 7.5 MiB of JSON in, 6.1 MiB of Markdown out), Apple M3 Pro, 2026-07. Both implementations produced **byte-identical output** for this document (sha256-verified) — the corpus promise holding on real-world data.
+
+| Surface | Median | Input throughput |
+| --- | --- | --- |
+| Go `ConvertText` | 128 ms | ~59 MiB/s |
+| TypeScript `convertJsonText` (Node 24) | 211 ms | ~36 MiB/s |
+| CLI `json-to-md spec3.json` (whole process, brew binary) | ~120 ms | — |
+
+Reproduce with any large JSON document:
+
+```sh
+pnpm build && node scripts/bench-file.mjs path/to/big.json
+cd go && BENCH_FILE=path/to/big.json go test -bench ConvertTextFile -run '^$'
+```
+
 ## Development
 
 ```sh
