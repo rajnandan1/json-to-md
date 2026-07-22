@@ -9,7 +9,7 @@ Convert one JSON document into deterministic, human-readable [GitHub Flavored Ma
 
 The same conversion runs in the browser, in Node, in Go, and on the command line. The TypeScript and Go implementations produce **byte-identical output**, enforced by a shared [`corpus/`](corpus/) and a cross-implementation fuzz gate in CI. Output is a readable **projection** rather than a reversible serialization format. Every document begins with a `# Results` heading and uses canonical spacing: LF endings, one blank line between blocks, no trailing spaces, one final newline.
 
-## Why JSON to MD matters for LLMs
+## Motivation
 
 If you feed JSON into an LLM, you pay for its punctuation. Every `{`, `}`, `"`,
 `:`, and `,` is tokens spent on structure the model does not need to read the
