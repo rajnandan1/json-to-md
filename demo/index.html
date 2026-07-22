@@ -3,7 +3,7 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
         <title>json-to-md · live demo</title>
         <style>
             :root {
@@ -48,8 +48,29 @@
                 line-height: 1.5;
             }
             header {
-                padding: 1.5rem clamp(1rem, 4vw, 2.5rem) 1rem;
+                padding: 1.25rem clamp(1rem, 4vw, 2.5rem) 1rem;
                 border-bottom: 1px solid var(--border);
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+                flex-wrap: wrap;
+            }
+            header picture img {
+                display: block;
+            }
+            .head-text {
+                flex: 1;
+                min-width: 16rem;
+            }
+            .credit {
+                font-size: 0.78rem;
+                color: var(--muted);
+                text-decoration: none;
+                white-space: nowrap;
+            }
+            .credit:hover {
+                color: var(--accent);
+                text-decoration: underline;
             }
             header h1 {
                 margin: 0;
@@ -262,12 +283,34 @@
     </head>
     <body>
         <header>
-            <h1><code>json-to-md</code> · live demo</h1>
-            <p>
-                Paste any JSON on the left. It is converted with
-                <code>convertJsonText</code> into deterministic GitHub Flavored
-                Markdown, shown rendered (or as raw source) on the right.
-            </p>
+            <picture>
+                <source
+                    media="(prefers-color-scheme: dark)"
+                    srcset="./logo-white.svg"
+                />
+                <img
+                    src="./logo.svg"
+                    alt="json-to-md logo"
+                    width="42"
+                    height="42"
+                />
+            </picture>
+            <div class="head-text">
+                <h1><code>json-to-md</code> · live demo</h1>
+                <p>
+                    Paste any JSON on the left. It is converted with
+                    <code>convertJsonText</code> into deterministic GitHub
+                    Flavored Markdown, shown rendered (or as raw source) on the
+                    right.
+                </p>
+            </div>
+            <a
+                class="credit"
+                href="https://rajnandan.com"
+                target="_blank"
+                rel="noopener"
+                >Built by Raj Nandan Sharma</a
+            >
         </header>
         <main>
             <section class="pane">
