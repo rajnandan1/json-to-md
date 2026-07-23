@@ -1,3 +1,3 @@
 # Results
 
-true
+true *(boolean)*

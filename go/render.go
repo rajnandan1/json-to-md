@@ -68,6 +68,20 @@ func pushReversed(stack *[]task, tasks []task) {
 	}
 }
 
+// annotatedText is the inline text of a value plus its Type Annotation. The
+// `*(type)*` token is unforgeable: a literal `*` in user data is always
+// escaped, so italics here can only come from the renderer.
+func annotatedText(n node, showTypes bool) string {
+	text := scalarText(n)
+	if !showTypes {
+		return text
+	}
+	if t := annotationType(n); t != "" {
+		return text + annotationSuffix(t)
+	}
+	return text
+}
+
 // tableColumns detects a Tabular Array: non-empty, every item an object,
 // union of keys non-empty. Returns nil when the array is not tabular.
 func tableColumns(items []node) []string {
@@ -95,13 +109,13 @@ func tableColumns(items []node) []string {
 
 // buildTableData builds a table's rows plus the Detail-cell tasks it spawns,
 // in row-major order.
-func buildTableData(items []node, columns []string, pointer string, detailLevel, detailSubLevel int) (tableData, []task) {
-	headers := make([]string, len(columns))
-	for i, c := range columns {
-		headers[i] = keyLabel(c)
-	}
+func buildTableData(items []node, columns []string, pointer string, detailLevel, detailSubLevel int, showTypes bool) (tableData, []task) {
 	rows := make([][]cell, 0, len(items))
 	var details []task
+	// Per column: colType "" = no present cell yet, colBare = not a Uniform
+	// Column (mixed types, or a link / Self-Describing cell).
+	colType := make([]string, len(columns))
+	colBare := make([]bool, len(columns))
 
 	for r, item := range items {
 		rowPointer := childPointer(pointer, strconv.Itoa(r))
@@ -110,11 +124,21 @@ func buildTableData(items []node, columns []string, pointer string, detailLevel,
 			byKey[m.name] = m.value
 		}
 		row := make([]cell, 0, len(columns))
-		for _, col := range columns {
+		for c, col := range columns {
 			value, present := byKey[col]
 			if !present {
 				row = append(row, cell{text: ""}) // Missing Property: empty cell.
 				continue
+			}
+			if !colBare[c] {
+				switch t := annotationType(value); {
+				case t == "":
+					colBare[c] = true
+				case colType[c] == "":
+					colType[c] = t
+				case colType[c] != t:
+					colBare[c] = true
+				}
 			}
 			if isContainer(value) && !isEmptyContainer(value) {
 				cellPointer := childPointer(rowPointer, col)
@@ -137,13 +161,22 @@ func buildTableData(items []node, columns []string, pointer string, detailLevel,
 		rows = append(rows, row)
 	}
 
+	headers := make([]string, len(columns))
+	for i, c := range columns {
+		label := keyLabel(c)
+		if showTypes && !colBare[i] && colType[i] != "" {
+			label += annotationSuffix(colType[i])
+		}
+		headers[i] = label
+	}
+
 	return tableData{headers: headers, rows: rows}, details
 }
 
 // buildListBlock builds the list block for a non-empty container in list
 // position. Iterative: an explicit heap stack keeps arbitrarily deep nesting
 // off the call stack.
-func buildListBlock(root node, rootPointer string, blockLevel int) ([]listPart, []task) {
+func buildListBlock(root node, rootPointer string, blockLevel int, showTypes bool) ([]listPart, []task) {
 	detailLevel := min(blockLevel, maxHeadingLevel)
 	detailSubLevel := min(detailLevel+1, maxHeadingLevel)
 	var parts []listPart
@@ -163,7 +196,7 @@ func buildListBlock(root node, rootPointer string, blockLevel int) ([]listPart, 
 		if child.kind == kindArray {
 			if columns := tableColumns(child.items); columns != nil {
 				parts = append(parts, listPart{text: lead})
-				table, det := buildTableData(child.items, columns, childPtr, detailLevel, detailSubLevel)
+				table, det := buildTableData(child.items, columns, childPtr, detailLevel, detailSubLevel, showTypes)
 				parts = append(parts, listPart{isTable: true, indent: indent, table: table})
 				details = append(details, det...)
 				return
@@ -189,7 +222,7 @@ func buildListBlock(root node, rootPointer string, blockLevel int) ([]listPart, 
 			label := keyLabel(m.name)
 			childPtr := childPointer(frame.pointer, m.name)
 			if rendersInline(m.value) {
-				parts = append(parts, listPart{text: pad + "- **" + label + ":** " + scalarText(m.value)})
+				parts = append(parts, listPart{text: pad + "- **" + label + ":** " + annotatedText(m.value, showTypes)})
 			} else {
 				handleContainer(m.value, childPtr, frame.indent+1, pad+"- **"+label+"**")
 			}
@@ -203,13 +236,13 @@ func buildListBlock(root node, rootPointer string, blockLevel int) ([]listPart, 
 			child := n.items[i]
 			childPtr := childPointer(frame.pointer, strconv.Itoa(i))
 			if rendersInline(child) {
-				parts = append(parts, listPart{text: pad + "- " + scalarText(child)})
+				parts = append(parts, listPart{text: pad + "- " + annotatedText(child, showTypes)})
 			} else {
 				handleContainer(child, childPtr, frame.indent+1, pad+"-")
 			}
 		default:
 			// A scalar can only appear as the root of a list when misused; guard anyway.
-			parts = append(parts, listPart{text: pad + "- " + scalarText(n)})
+			parts = append(parts, listPart{text: pad + "- " + annotatedText(n, showTypes)})
 			stack = stack[:len(stack)-1]
 		}
 	}
@@ -218,8 +251,11 @@ func buildListBlock(root node, rootPointer string, blockLevel int) ([]listPart, 
 }
 
 // layout walks the document (iteratively) into an ordered list of blocks.
-func layout(root node) []block {
-	blocks := []block{{kind: blockHeading, level: 1, text: "Results"}}
+func layout(root node, o convertOptions) []block {
+	var blocks []block
+	if !o.omitHeading {
+		blocks = append(blocks, block{kind: blockHeading, level: 1, text: escapeInline(o.heading)})
+	}
 	stack := []task{{node: root, pointer: "", level: 2}}
 
 	for len(stack) > 0 {
@@ -234,13 +270,13 @@ func layout(root node) []block {
 		n, pointer, level := t.node, t.pointer, t.level
 
 		if rendersInline(n) {
-			blocks = append(blocks, block{kind: blockText, text: scalarText(n)})
+			blocks = append(blocks, block{kind: blockText, text: annotatedText(n, o.showTypes)})
 			continue
 		}
 
 		if n.kind == kindObject {
 			if level > maxHeadingLevel {
-				parts, details := buildListBlock(n, pointer, level)
+				parts, details := buildListBlock(n, pointer, level, o.showTypes)
 				blocks = append(blocks, block{kind: blockList, parts: parts})
 				pushReversed(&stack, details)
 				continue
@@ -258,14 +294,14 @@ func layout(root node) []block {
 		// Array (rendersInline already excluded scalars and empty containers).
 		columns := tableColumns(n.items)
 		if columns == nil {
-			parts, details := buildListBlock(n, pointer, level)
+			parts, details := buildListBlock(n, pointer, level, o.showTypes)
 			blocks = append(blocks, block{kind: blockList, parts: parts})
 			pushReversed(&stack, details)
 			continue
 		}
 		detailLevel := min(level, maxHeadingLevel)
 		detailSubLevel := min(detailLevel+1, maxHeadingLevel)
-		table, details := buildTableData(n.items, columns, pointer, detailLevel, detailSubLevel)
+		table, details := buildTableData(n.items, columns, pointer, detailLevel, detailSubLevel, o.showTypes)
 		tasks := make([]task, 0, len(details)+1)
 		tasks = append(tasks, task{emit: true, block: block{kind: blockTable, table: table}})
 		tasks = append(tasks, details...)
@@ -313,8 +349,8 @@ func serializeList(parts []listPart, fragments map[string]string) string {
 	return strings.Join(lines, "\n")
 }
 
-func renderDocument(root node) string {
-	blocks := layout(root)
+func renderDocument(root node, o convertOptions) string {
+	blocks := layout(root, o)
 
 	// Allocate heading fragments in final document order; map detail pointers
 	// to them.

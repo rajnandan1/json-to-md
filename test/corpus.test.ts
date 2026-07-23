@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { convertJsonText, JsonToMarkdownError } from "../src/index.js";
+import { convertJsonText, JsonToMarkdownError, type ConvertOptions } from "../src/index.js";
 
 const root = join(__dirname, "..", "corpus");
 
@@ -31,17 +31,20 @@ describe("parity corpus", () => {
   for (const base of bases) {
     const name = base.slice(root.length + 1);
     const input = readFileSync(`${base}.input.json`, "utf8");
+    const options: ConvertOptions | undefined = existsSync(`${base}.options.json`)
+      ? (JSON.parse(readFileSync(`${base}.options.json`, "utf8")) as ConvertOptions)
+      : undefined;
 
     if (existsSync(`${base}.expected.md`)) {
       it(name, () => {
-        expect(convertJsonText(input)).toBe(readFileSync(`${base}.expected.md`, "utf8"));
+        expect(convertJsonText(input, options)).toBe(readFileSync(`${base}.expected.md`, "utf8"));
       });
     } else {
       const fixture = JSON.parse(readFileSync(`${base}.error.json`, "utf8")) as ErrorFixture;
       it(name, () => {
         let caught: unknown;
         try {
-          convertJsonText(input);
+          convertJsonText(input, options);
         } catch (e) {
           caught = e;
         }

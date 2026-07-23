@@ -43,6 +43,45 @@ func corpusCases(t *testing.T) []string {
 	return bases
 }
 
+// corpusOptions maps a case's optional .options.json onto functional options.
+// A JSON null heading means WithoutHeading; an absent key means the default.
+func corpusOptions(t *testing.T, base string) []Option {
+	t.Helper()
+	raw, err := os.ReadFile(base + ".options.json")
+	if errors.Is(err, fs.ErrNotExist) {
+		return nil
+	}
+	if err != nil {
+		t.Fatalf("reading options: %v", err)
+	}
+	var fields map[string]json.RawMessage
+	if err := json.Unmarshal(raw, &fields); err != nil {
+		t.Fatalf("bad options fixture: %v", err)
+	}
+	var opts []Option
+	if h, ok := fields["heading"]; ok {
+		var s *string
+		if err := json.Unmarshal(h, &s); err != nil {
+			t.Fatalf("bad heading option: %v", err)
+		}
+		if s == nil {
+			opts = append(opts, WithoutHeading())
+		} else {
+			opts = append(opts, WithHeading(*s))
+		}
+	}
+	if st, ok := fields["showTypes"]; ok {
+		var b bool
+		if err := json.Unmarshal(st, &b); err != nil {
+			t.Fatalf("bad showTypes option: %v", err)
+		}
+		if !b {
+			opts = append(opts, WithoutTypes())
+		}
+	}
+	return opts
+}
+
 func sameLocation(got, want *SourceLocation) bool {
 	if got == nil || want == nil {
 		return got == nil && want == nil
@@ -59,8 +98,9 @@ func TestCorpus(t *testing.T) {
 		}
 
 		t.Run(name, func(t *testing.T) {
+			opts := corpusOptions(t, base)
 			if expected, err := os.ReadFile(base + ".expected.md"); err == nil {
-				got, convErr := ConvertText(input)
+				got, convErr := ConvertText(input, opts...)
 				if convErr != nil {
 					t.Fatalf("unexpected error: %v", convErr)
 				}
@@ -79,7 +119,7 @@ func TestCorpus(t *testing.T) {
 				t.Fatalf("bad error fixture: %v", err)
 			}
 
-			_, convErr := ConvertText(input)
+			_, convErr := ConvertText(input, opts...)
 			var e *Error
 			if !errors.As(convErr, &e) {
 				t.Fatalf("expected *jsontomd.Error, got %v", convErr)
@@ -113,7 +153,7 @@ func TestConvertValue(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		want := "# Results\n\n## z\n\n1.00\n\n## a\n\nx\n"
+		want := "# Results\n\n## z\n\n1.00 *(number)*\n\n## a\n\nx *(string)*\n"
 		if got != want {
 			t.Fatalf("got %q, want %q", got, want)
 		}

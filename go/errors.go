@@ -20,6 +20,9 @@ const (
 	// ErrCyclicReference reports that ConvertValue received a self-referencing
 	// value.
 	ErrCyclicReference ErrorCode = "CYCLIC_REFERENCE"
+	// ErrInvalidOption reports an invalid conversion option (an empty Document
+	// Heading; use WithoutHeading to omit the heading instead).
+	ErrInvalidOption ErrorCode = "INVALID_OPTION"
 )
 
 // SourceLocation is a position inside Serialized JSON Text.

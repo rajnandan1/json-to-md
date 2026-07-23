@@ -1,3 +1,3 @@
 # Results
 
-\- not a bullet
+\- not a bullet *(string)*

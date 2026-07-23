@@ -1,8 +1,52 @@
 import GithubSlugger from "github-slugger";
 import { childPointer, isEmptyContainer, rendersInline, type DocNode } from "./document.js";
-import { escapeInline, keyLabel, scalarText } from "./text.js";
+import { JsonToMarkdownError } from "./errors.js";
+import { annotationSuffix, annotationType, escapeInline, keyLabel, scalarText, type AnnotationType } from "./text.js";
 
 const MAX_HEADING_LEVEL = 6;
+
+export interface ConvertOptions {
+  /**
+   * Document Heading text. A string replaces the default `"Results"` (rendered
+   * as plain text, never raw Markdown); `null` omits the H1 entirely without
+   * shifting body heading levels. An empty string is INVALID_OPTION.
+   */
+  readonly heading?: string | null;
+  /** Emit Type Annotations (` *(integer)*` …) after annotatable values. Default true. */
+  readonly showTypes?: boolean;
+}
+
+interface ResolvedOptions {
+  readonly heading: string | null;
+  readonly showTypes: boolean;
+}
+
+function resolveOptions(options: ConvertOptions): ResolvedOptions {
+  const heading = options.heading === undefined ? "Results" : options.heading;
+  if (heading !== null && typeof heading !== "string") {
+    throw new JsonToMarkdownError("INVALID_OPTION", "heading must be a string or null");
+  }
+  if (heading === "") {
+    throw new JsonToMarkdownError("INVALID_OPTION", "heading must not be empty; pass null to omit it");
+  }
+  const showTypes = options.showTypes === undefined ? true : options.showTypes;
+  if (typeof showTypes !== "boolean") {
+    throw new JsonToMarkdownError("INVALID_OPTION", "showTypes must be a boolean");
+  }
+  return { heading, showTypes };
+}
+
+/**
+ * The inline text of a value plus its Type Annotation. The `*(type)*` token is
+ * unforgeable: a literal `*` in user data is always escaped, so italics here can
+ * only come from the renderer.
+ */
+function annotatedText(node: DocNode, showTypes: boolean): string {
+  const text = scalarText(node);
+  if (!showTypes) return text;
+  const type = annotationType(node);
+  return type === null ? text : text + annotationSuffix(type);
+}
 
 /** Push tasks so they run in given order under a LIFO stack. */
 function pushReversed(stack: Task[], tasks: readonly Task[]): void {
@@ -60,21 +104,31 @@ function buildTableData(
   pointer: string,
   detailLevel: number,
   detailSubLevel: number,
+  showTypes: boolean,
 ): { table: TableData; details: Task[] } {
-  const headers = columns.map((c) => keyLabel(c));
   const rows: Cell[][] = [];
   const details: Task[] = [];
+  // Per column: undefined = no present cell seen yet, "bare" = not a Uniform
+  // Column (mixed types, or a link / Self-Describing cell), else its one type.
+  const colTypes: (AnnotationType | "bare" | undefined)[] = columns.map(() => undefined);
 
   for (let r = 0; r < items.length; r++) {
     const item = items[r]! as Extract<DocNode, { kind: "object" }>;
     const rowPointer = childPointer(pointer, String(r));
     const byKey = new Map<string, DocNode>(item.entries);
     const row: Cell[] = [];
-    for (const col of columns) {
+    for (let c = 0; c < columns.length; c++) {
+      const col = columns[c]!;
       const value = byKey.get(col);
       if (value === undefined) {
         row.push({ t: "scalar", text: "" }); // Missing Property: empty cell.
         continue;
+      }
+      const type = annotationType(value);
+      if (colTypes[c] !== "bare") {
+        if (type === null) colTypes[c] = "bare";
+        else if (colTypes[c] === undefined) colTypes[c] = type;
+        else if (colTypes[c] !== type) colTypes[c] = "bare";
       }
       if (value.kind === "object" || value.kind === "array") {
         if (isEmptyContainer(value)) {
@@ -104,6 +158,12 @@ function buildTableData(
     rows.push(row);
   }
 
+  const headers = columns.map((col, c) => {
+    const type = colTypes[c];
+    const label = keyLabel(col);
+    return showTypes && type !== undefined && type !== "bare" ? label + annotationSuffix(type) : label;
+  });
+
   return { table: { headers, rows }, details };
 }
 
@@ -117,6 +177,7 @@ function buildListBlock(
   root: DocNode,
   rootPointer: string,
   blockLevel: number,
+  showTypes: boolean,
 ): { parts: ListPart[]; details: Task[] } {
   const detailLevel = Math.min(blockLevel, MAX_HEADING_LEVEL);
   const detailSubLevel = Math.min(detailLevel + 1, MAX_HEADING_LEVEL);
@@ -137,7 +198,7 @@ function buildListBlock(
       const columns = tableColumns(child.items);
       if (columns !== null) {
         parts.push({ kind: "line", text: lead });
-        const built = buildTableData(child.items, columns, childPtr, detailLevel, detailSubLevel);
+        const built = buildTableData(child.items, columns, childPtr, detailLevel, detailSubLevel, showTypes);
         parts.push({ kind: "table", indent, table: built.table });
         for (const task of built.details) details.push(task);
         return;
@@ -161,7 +222,7 @@ function buildListBlock(
       const label = keyLabel(key);
       const childPtr = childPointer(frame.pointer, key);
       if (rendersInline(child)) {
-        parts.push({ kind: "line", text: `${pad}- **${label}:** ${scalarText(child)}` });
+        parts.push({ kind: "line", text: `${pad}- **${label}:** ${annotatedText(child, showTypes)}` });
       } else {
         handleContainer(child, childPtr, frame.indent + 1, `${pad}- **${label}**`);
       }
@@ -174,13 +235,13 @@ function buildListBlock(
       const child = node.items[i]!;
       const childPtr = childPointer(frame.pointer, String(i));
       if (rendersInline(child)) {
-        parts.push({ kind: "line", text: `${pad}- ${scalarText(child)}` });
+        parts.push({ kind: "line", text: `${pad}- ${annotatedText(child, showTypes)}` });
       } else {
         handleContainer(child, childPtr, frame.indent + 1, `${pad}-`);
       }
     } else {
       // A scalar can only appear as the root of a list when misused; guard anyway.
-      parts.push({ kind: "line", text: `${pad}- ${scalarText(node)}` });
+      parts.push({ kind: "line", text: `${pad}- ${annotatedText(node, showTypes)}` });
       stack.pop();
     }
   }
@@ -189,8 +250,11 @@ function buildListBlock(
 }
 
 /** Walk the document (iteratively) into an ordered list of blocks. */
-function layout(root: DocNode): Block[] {
-  const blocks: Block[] = [{ kind: "heading", level: 1, text: "Results" }];
+function layout(root: DocNode, opts: ResolvedOptions): Block[] {
+  const blocks: Block[] = [];
+  if (opts.heading !== null) {
+    blocks.push({ kind: "heading", level: 1, text: escapeInline(opts.heading) });
+  }
   const stack: Task[] = [{ t: "value", node: root, pointer: "", level: 2 }];
 
   while (stack.length > 0) {
@@ -204,13 +268,13 @@ function layout(root: DocNode): Block[] {
     const { node, pointer, level } = task;
 
     if (rendersInline(node)) {
-      blocks.push({ kind: "text", text: scalarText(node) });
+      blocks.push({ kind: "text", text: annotatedText(node, opts.showTypes) });
       continue;
     }
 
     if (node.kind === "object") {
       if (level > MAX_HEADING_LEVEL) {
-        const { parts, details } = buildListBlock(node, pointer, level);
+        const { parts, details } = buildListBlock(node, pointer, level, opts.showTypes);
         blocks.push({ kind: "list", parts });
         pushReversed(stack, details);
         continue;
@@ -229,14 +293,14 @@ function layout(root: DocNode): Block[] {
     if (node.kind !== "array") continue;
     const columns = tableColumns(node.items);
     if (columns === null) {
-      const { parts, details } = buildListBlock(node, pointer, level);
+      const { parts, details } = buildListBlock(node, pointer, level, opts.showTypes);
       blocks.push({ kind: "list", parts });
       pushReversed(stack, details);
       continue;
     }
     const detailLevel = Math.min(level, MAX_HEADING_LEVEL);
     const detailSubLevel = Math.min(detailLevel + 1, MAX_HEADING_LEVEL);
-    const { table, details } = buildTableData(node.items, columns, pointer, detailLevel, detailSubLevel);
+    const { table, details } = buildTableData(node.items, columns, pointer, detailLevel, detailSubLevel, opts.showTypes);
     pushReversed(stack, [{ t: "emit", block: { kind: "table", table } }, ...details]);
   }
 
@@ -262,8 +326,8 @@ function serializeList(parts: readonly ListPart[], fragments: Map<string, string
   return parts.map((p) => (p.kind === "line" ? p.text : serializeTable(p.table, p.indent, fragments))).join("\n");
 }
 
-export function renderDocument(root: DocNode): string {
-  const blocks = layout(root);
+export function renderDocument(root: DocNode, options: ConvertOptions = {}): string {
+  const blocks = layout(root, resolveOptions(options));
 
   // Allocate heading fragments in final document order; map detail pointers to them.
   const slugger = new GithubSlugger();

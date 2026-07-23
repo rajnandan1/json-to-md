@@ -1,8 +1,8 @@
 # Results
 
-- 1
-- two
+- 1 *(integer)*
+- two *(string)*
 - `null`
-- true
+- true *(boolean)*
 - `[]`
 - `{}`

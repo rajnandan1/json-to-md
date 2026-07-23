@@ -237,6 +237,32 @@ func keyLabel(name string) string {
 	return escapeInline(name)
 }
 
+// annotationSuffix is the Type Annotation token appended after a value or a
+// Uniform Column header.
+func annotationSuffix(t string) string {
+	return " *(" + t + ")*"
+}
+
+// annotationType is the Annotation Type of a value ("string", "integer",
+// "number", "boolean"), or "" for Self-Describing Values (null, `[]`, `{}`)
+// which never carry a Type Annotation. A number is an integer when its
+// Numeric Lexeme has no fraction or exponent part.
+func annotationType(n node) string {
+	switch n.kind {
+	case kindString:
+		return "string"
+	case kindBool:
+		return "boolean"
+	case kindNumber:
+		if strings.ContainsAny(n.lexeme, ".eE") {
+			return "number"
+		}
+		return "integer"
+	default:
+		return ""
+	}
+}
+
 // scalarText is the inline representation of a Scalar Value, or of an empty
 // container shown inline as `[]`/`{}`. Same rendering in every context.
 func scalarText(n node) string {

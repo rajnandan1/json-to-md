@@ -35,7 +35,7 @@ describe("heading range transitions", () => {
     const md = convertJsonValue({ a: { b: { c: { d: { e: { f: { g: 1 } } } } } } });
     expect(md).toContain("###### e");
     expect(md).toContain("- **f**");
-    expect(md).toContain("  - **g:** 1");
+    expect(md).toContain("  - **g:** 1 *(integer)*");
     expect(md).not.toContain("#######");
   });
 
