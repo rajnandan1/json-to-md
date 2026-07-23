@@ -10,14 +10,57 @@
 //
 // All functions are pure: they never mutate input, share no state, are safe
 // for concurrent use, and fail atomically — on error no partial Markdown is
-// returned. Every Output Document begins with "# Results" and uses canonical
-// spacing (LF endings, one blank line between blocks, one final newline).
+// returned. Every Output Document begins with its Document Heading ("# Results"
+// unless WithHeading/WithoutHeading says otherwise), annotates value types
+// unless WithoutTypes is given, and uses canonical spacing (LF endings, one
+// blank line between blocks, one final newline).
 package jsontomd
 
 import (
 	"encoding/json"
 	"strings"
 )
+
+// Option configures a conversion. The zero configuration (no options) uses
+// the Document Heading "Results" and emits Type Annotations — the same
+// defaults as the TypeScript implementation.
+type Option func(*convertOptions)
+
+type convertOptions struct {
+	heading     string
+	omitHeading bool
+	showTypes   bool
+}
+
+// WithHeading replaces the default Document Heading text "Results". The text
+// is rendered as plain text, never raw Markdown. An empty string is
+// ErrInvalidOption; use WithoutHeading to omit the heading.
+func WithHeading(heading string) Option {
+	return func(o *convertOptions) { o.heading = heading; o.omitHeading = false }
+}
+
+// WithoutHeading omits the H1 Document Heading entirely. Body heading levels
+// are unchanged (top-level keys stay H2).
+func WithoutHeading() Option {
+	return func(o *convertOptions) { o.omitHeading = true }
+}
+
+// WithoutTypes suppresses Type Annotations, reproducing v1 output byte for
+// byte.
+func WithoutTypes() Option {
+	return func(o *convertOptions) { o.showTypes = false }
+}
+
+func resolveOptions(opts []Option) (convertOptions, error) {
+	o := convertOptions{heading: "Results", showTypes: true}
+	for _, opt := range opts {
+		opt(&o)
+	}
+	if !o.omitHeading && o.heading == "" {
+		return o, &Error{Code: ErrInvalidOption, Message: "heading must not be empty; use WithoutHeading to omit it"}
+	}
+	return o, nil
+}
 
 // ConvertText converts untrusted Serialized JSON Text into an Output
 // Document. src must be UTF-8 encoded text containing exactly one JSON
@@ -27,12 +70,16 @@ import (
 // convertJsonText: member Encounter Order is preserved, each number's exact
 // source spelling (Numeric Lexeme) is kept, and duplicate member names are
 // rejected with both locations reported.
-func ConvertText(src []byte) (string, error) {
+func ConvertText(src []byte, opts ...Option) (string, error) {
 	root, err := parseSerialized(src)
 	if err != nil {
 		return "", err
 	}
-	return renderDocument(root), nil
+	o, err := resolveOptions(opts)
+	if err != nil {
+		return "", err
+	}
+	return renderDocument(root, o), nil
 }
 
 // ConvertValue converts caller-trusted, already-parsed Go data into an
@@ -52,12 +99,12 @@ func ConvertText(src []byte) (string, error) {
 // json.Marshaler emitting duplicate member names is caught by the conversion
 // core as ErrDuplicateMemberName. Sparse arrays cannot exist in Go, so no
 // SPARSE_ARRAY code exists.
-func ConvertValue(v any) (string, error) {
+func ConvertValue(v any, opts ...Option) (string, error) {
 	data, err := json.Marshal(v)
 	if err != nil {
 		return "", translateMarshalError(err)
 	}
-	return ConvertText(data)
+	return ConvertText(data, opts...)
 }
 
 func translateMarshalError(err error) error {

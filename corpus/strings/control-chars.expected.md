@@ -1,3 +1,3 @@
 # Results
 
-tab\tbell\u0007del\u007f
+tab\tbell\u0007del\u007f *(string)*

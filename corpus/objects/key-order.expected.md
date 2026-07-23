@@ -2,12 +2,12 @@
 
 ## z
 
-1
+1 *(integer)*
 
 ## a
 
-2
+2 *(integer)*
 
 ## m
 
-3
+3 *(integer)*

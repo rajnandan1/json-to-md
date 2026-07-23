@@ -90,6 +90,27 @@ const cases = {
   "errors/bad-number-fraction": "1.",
   "errors/bad-number-exponent": "1e+",
   "errors/lone-minus": "-",
+
+  // Type Annotations on tables (default showTypes)
+  "tables/mixed-type-column": '[{"v":1,"w":"a"},{"v":"x","w":"b"}]',
+  "tables/integer-number-mix": '[{"n":1},{"n":1.5}]',
+  // A URL String is still a string: the column header is annotated even though
+  // its cells render as links (only container detail-link columns stay bare).
+  "tables/url-column": '[{"u":"https://a.example"},{"u":"https://b.example"}]',
+
+  // Conversion options (v2): a case may carry <case>.options.json
+  "options/heading-custom": { input: '{"a":1}', options: { heading: "Custom Heading" } },
+  "options/heading-escaped": { input: "1", options: { heading: "# raw *md* | pipe" } },
+  "options/heading-omitted": { input: '{"a":{"b":[1,2]}}', options: { heading: null } },
+  "options/heading-slug-collision": {
+    input: '{"t":[{"kids":[{"n":1}]}]}',
+    options: { heading: "/t/0/kids" },
+  },
+  "options/heading-empty-error": { input: "1", options: { heading: "" } },
+  "options/show-types-off": {
+    input: '{"table1":[{"age":14,"degrees":[{"name":"B-Degree","year":"2023"}]}]}',
+    options: { showTypes: false },
+  },
 };
 
 const README = `# Parity corpus
@@ -98,6 +119,8 @@ The contract of record for the byte-identical promise between the TypeScript
 and Go implementations: for every case here, both must produce the same bytes.
 
 - \`<group>/<case>.input.json\` — raw Serialized JSON Text, byte-exact.
+- \`<case>.options.json\` — optional ConvertOptions for the case (absent means
+  defaults). \`"heading": null\` omits the Document Heading.
 - \`<case>.expected.md\` — the Output Document, byte-exact (one final newline).
 - \`<case>.error.json\` — contractual error fields only: \`code\`, and when
   present \`pointer\`, \`location\`/\`firstLocation\` \`{offset,line,column}\`
@@ -114,12 +137,16 @@ await writeFile(root + "README.md", README);
 
 let ok = 0;
 let err = 0;
-for (const [name, input] of Object.entries(cases)) {
+for (const [name, spec] of Object.entries(cases)) {
+  const { input, options } = typeof spec === "string" ? { input: spec, options: undefined } : spec;
   const base = root + name;
   await mkdir(dirname(base), { recursive: true });
   await writeFile(`${base}.input.json`, input);
+  if (options !== undefined) {
+    await writeFile(`${base}.options.json`, JSON.stringify(options, null, 2) + "\n");
+  }
   try {
-    const md = convertJsonText(input);
+    const md = convertJsonText(input, options);
     await writeFile(`${base}.expected.md`, md);
     ok++;
   } catch (e) {

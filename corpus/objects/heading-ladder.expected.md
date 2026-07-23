@@ -10,5 +10,5 @@
 
 ###### e
 
-- **f:** 1
-- **g:** false
+- **f:** 1 *(integer)*
+- **g:** false *(boolean)*

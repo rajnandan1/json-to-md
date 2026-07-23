@@ -3,7 +3,8 @@ export type JsonToMarkdownErrorCode =
   | "DUPLICATE_MEMBER_NAME"
   | "INVALID_PARSED_VALUE"
   | "CYCLIC_REFERENCE"
-  | "SPARSE_ARRAY";
+  | "SPARSE_ARRAY"
+  | "INVALID_OPTION";
 
 export interface SourceLocation {
   /** Zero-based UTF-16 code-unit index. */

@@ -2,7 +2,7 @@
 
 ## table1
 
-| age | degrees |
+| age *(integer)* | degrees |
 | --- | --- |
 | 14 | [/table1/0/degrees](#table10degrees) |
 
@@ -10,6 +10,6 @@
 
 ### /table1/0/degrees
 
-| name | year |
+| name *(string)* | year *(string)* |
 | --- | --- |
 | B-Degree | 2023 |

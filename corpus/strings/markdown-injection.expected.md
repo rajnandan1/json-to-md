@@ -1,3 +1,3 @@
 # Results
 
-\# not a heading \*nor\* \[link\](x) \| pipe
+\# not a heading \*nor\* \[link\](x) \| pipe *(string)*

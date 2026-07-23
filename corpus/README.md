@@ -4,6 +4,8 @@ The contract of record for the byte-identical promise between the TypeScript
 and Go implementations: for every case here, both must produce the same bytes.
 
 - `<group>/<case>.input.json` — raw Serialized JSON Text, byte-exact.
+- `<case>.options.json` — optional ConvertOptions for the case (absent means
+  defaults). `"heading": null` omits the Document Heading.
 - `<case>.expected.md` — the Output Document, byte-exact (one final newline).
 - `<case>.error.json` — contractual error fields only: `code`, and when
   present `pointer`, `location`/`firstLocation` `{offset,line,column}`

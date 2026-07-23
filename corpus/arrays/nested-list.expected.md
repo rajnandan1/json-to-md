@@ -1,9 +1,9 @@
 # Results
 
 -
-  - 1
-  - 2
+  - 1 *(integer)*
+  - 2 *(integer)*
 -
-  - 3
+  - 3 *(integer)*
   -
-    - 4
+    - 4 *(integer)*
