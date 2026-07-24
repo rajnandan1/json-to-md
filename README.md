@@ -7,7 +7,7 @@
 
 Convert one JSON document into deterministic, human-readable [GitHub Flavored Markdown](https://github.github.com/gfm/).
 
-The same conversion runs in the browser, in Node, in Go, and on the command line. The TypeScript and Go implementations produce **byte-identical output**, enforced by a shared [`corpus/`](corpus/) and a cross-implementation fuzz gate in CI. Output is a readable **projection** rather than a reversible serialization format. Every document begins with a `# Results` heading (replace or omit it via the `heading` option), annotates value types — `42 *(integer)*` — unless `showTypes: false`, and uses canonical spacing: LF endings, one blank line between blocks, no trailing spaces, one final newline.
+The same conversion runs in the browser, in Node, in Go, and on the command line. The TypeScript and Go implementations produce **byte-identical output**, enforced by a shared [`corpus/`](corpus/) and a cross-implementation fuzz gate in CI. Output is a readable **projection** rather than a reversible serialization format. Every document begins with a `# Results` heading (replace or omit it via the `heading` option), leaves values bare unless `showTypes: true` opts into type annotations — `42 *(integer)*` — and uses canonical spacing: LF endings, one blank line between blocks, no trailing spaces, one final newline.
 
 ## Motivation
 
@@ -56,11 +56,11 @@ convertJsonValue({ hello: "world" }); // already-parsed, caller-trusted data
 //
 // ## hello
 //
-// world *(string)*
+// world
 
 convertJsonValue({ hello: "world" }, { heading: "Greeting" }); // custom H1
 convertJsonValue({ hello: "world" }, { heading: null }); // no H1 at all
-convertJsonValue({ hello: "world" }, { showTypes: false }); // v1-identical output
+convertJsonValue({ hello: "world" }, { showTypes: true }); // world *(string)*
 ```
 
 CommonJS works too: `const { convertJsonText } = require("@rajnandan1/json-to-md")`. See the [API reference](#api-reference) for the two entry points' exact contracts and errors.
@@ -73,19 +73,19 @@ The same package: bundle it (Vite, webpack, esbuild; it's plain ESM with no depe
 
 ```html
 <script type="module">
-    import { convertJsonText } from "https://cdn.jsdelivr.net/npm/@rajnandan1/json-to-md@2/dist/index.js";
+    import { convertJsonText } from "https://cdn.jsdelivr.net/npm/@rajnandan1/json-to-md@3/dist/index.js";
     document.body.textContent = convertJsonText('{"hello":"world"}');
 </script>
 ```
 
-(`@2` floats on the latest 2.x; pin `@2.0.0` for exact bytes. The same path works on unpkg at `https://unpkg.com/@rajnandan1/json-to-md@2.0.0/dist/index.js`, or via esm.sh as `https://esm.sh/@rajnandan1/json-to-md`.)
+(`@3` floats on the latest 3.x; pin `@3.0.0` for exact bytes. The same path works on unpkg at `https://unpkg.com/@rajnandan1/json-to-md@3.0.0/dist/index.js`, or via esm.sh as `https://esm.sh/@rajnandan1/json-to-md`.)
 
 No modules? A classic script tag works too; the IIFE build exposes a `jsonToMd` global. Pin it with [Subresource Integrity](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity) so a compromised CDN can't swap the code (the hash is per-version, so update both together when bumping):
 
 ```html
 <script
-    src="https://cdn.jsdelivr.net/npm/@rajnandan1/json-to-md@1.0.1/dist/index.global.js"
-    integrity="sha384-v5+v71wtLTKJo2nT4Ly2Ov4u1QDPPPC0fhwy1q9I8lqsEtDOIuH/4AIwyt9lRQmR"
+    src="https://cdn.jsdelivr.net/npm/@rajnandan1/json-to-md@3.0.0/dist/index.global.js"
+    integrity="sha384-6XOx5QA0174AwBcxAMsdg1hw1Oli233F1ps3M9ZZBj48H8Lg+bA1+6GE9FVc88Qn"
     crossorigin="anonymous"
 ></script>
 <script>
@@ -126,7 +126,7 @@ md, err = jsontomd.ConvertValue(v)                           // any Go value, ma
 // Options mirror the TS ConvertOptions:
 md, err = jsontomd.ConvertText(src, jsontomd.WithHeading("Greeting")) // heading: "Greeting"
 md, err = jsontomd.ConvertText(src, jsontomd.WithoutHeading())        // heading: null
-md, err = jsontomd.ConvertText(src, jsontomd.WithoutTypes())          // showTypes: false
+md, err = jsontomd.ConvertText(src, jsontomd.WithTypes())             // showTypes: true
 
 var convErr *jsontomd.Error
 if errors.As(err, &convErr) {
@@ -153,6 +153,7 @@ go install github.com/rajnandan1/json-to-md/go/cmd/json-to-md@latest
 ```sh
 json-to-md data.json > out.md                       # file in, Markdown out
 curl -s https://api.example.com/items | json-to-md  # stdin (no arg, or '-')
+json-to-md --types data.json                        # annotate values with their JSON types
 json-to-md --json broken.json 2> error.json         # structured errors on stderr
 json-to-md --version
 ```
@@ -163,7 +164,7 @@ Exit codes: `0` success, `1` conversion failed, `2` usage or I/O error. Failures
 
 There are two entry points, one for already-parsed data and one for untrusted JSON text, plus a typed error. Both functions return the complete Markdown string or throw `JsonToMarkdownError`. Calls are pure, never mutate input, share no state, and are safe to run concurrently.
 
-Go mirrors these contracts one-for-one: `ConvertText` ↔ `convertJsonText` (byte-identical output), `ConvertValue` ↔ `convertJsonValue` (host-language marshaling semantics), functional options ↔ `ConvertOptions` (`WithHeading`/`WithoutHeading`/`WithoutTypes`), and `*jsontomd.Error` ↔ `JsonToMarkdownError`, with the same codes, JSON Pointers, and UTF-16 locations (`SPARSE_ARRAY` cannot occur in Go).
+Go mirrors these contracts one-for-one: `ConvertText` ↔ `convertJsonText` (byte-identical output), `ConvertValue` ↔ `convertJsonValue` (host-language marshaling semantics), functional options ↔ `ConvertOptions` (`WithHeading`/`WithoutHeading`/`WithTypes`), and `*jsontomd.Error` ↔ `JsonToMarkdownError`, with the same codes, JSON Pointers, and UTF-16 locations (`SPARSE_ARRAY` cannot occur in Go).
 
 ### `convertJsonValue(value: unknown, options?: ConvertOptions): string`
 
@@ -174,11 +175,11 @@ Accepts caller-trusted, already-parsed JSON data and validates it at runtime. Re
 Accepts untrusted **serialized** JSON, parses it without executing caller code, and preserves each number's original spelling. It keeps object-member order, array order, and numeric tokens intact.
 
 ```ts
-convertJsonText("9007199254740993"); // "…\n\n9007199254740993 *(integer)*\n"  (preserved)
-convertJsonValue(9007199254740993); // "…\n\n9007199254740992 *(integer)*\n"  (already rounded by JS)
+convertJsonText("9007199254740993"); // "…\n\n9007199254740993\n"  (preserved)
+convertJsonValue(9007199254740993); // "…\n\n9007199254740992\n"  (already rounded by JS)
 
-convertJsonText("1.00"); // "1.00 *(number)*"
-convertJsonValue(1.0); // "1 *(integer)*"
+convertJsonText("1.00"); // "1.00"
+convertJsonValue(1.0); // "1"
 ```
 
 ### `ConvertOptions`
@@ -186,7 +187,7 @@ convertJsonValue(1.0); // "1 *(integer)*"
 | Option      | Type             | Default     | Effect                                                                                                                                              |
 | ----------- | ---------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `heading`   | `string \| null` | `"Results"` | The H1 the document begins with, rendered as plain text (never raw Markdown). `null` omits the H1 entirely; body heading levels are unchanged.       |
-| `showTypes` | `boolean`        | `true`      | Appends ` *(string)*` / ` *(integer)*` / ` *(number)*` / ` *(boolean)*` to values, and to a table header when every present cell shares one type. `false` reproduces v1 output byte for byte. |
+| `showTypes` | `boolean`        | `false`     | When `true`, appends ` *(string)*` / ` *(integer)*` / ` *(number)*` / ` *(boolean)*` to values, and to a table header when every present cell shares one type.       |
 
 An empty-string `heading` throws `INVALID_OPTION` (pass `null` to omit the heading). Annotations never appear on `` `null` ``, `` `[]` ``, or `` `{}` `` — their rendering already states the type — and never inside table cells. The `*(…)*` token cannot be forged by data: a literal `*` in a string is always escaped.
 
@@ -219,13 +220,14 @@ Conversion fails atomically at the first error in encounter order and never retu
 | String                              | Escaped literal text; never injects Markdown or HTML                                               |
 | Whole-string absolute `http(s)` URL | Markdown link                                                                                      |
 | `null` / `""` / `[]` / `{}`         | `` `null` `` / `` `""` `` / `` `[]` `` / `` `{}` `` (each kept distinct from a missing table cell) |
-| Scalar types (`showTypes`, default) | ` *(string)*` / ` *(integer)*` / ` *(number)*` / ` *(boolean)*` after the value; on a table header when the column's type is uniform |
+| Scalar types (`showTypes: true`)    | ` *(string)*` / ` *(integer)*` / ` *(number)*` / ` *(boolean)*` after the value; on a table header when the column's type is uniform |
 
 ```ts
 convertJsonText(
     JSON.stringify({
         table1: [{ age: 14, degrees: [{ name: "B-Degree", year: "2023" }] }],
     }),
+    { showTypes: true },
 );
 ```
 

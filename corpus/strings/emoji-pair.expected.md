@@ -1,3 +1,3 @@
 # Results
 
-smile 😀 end *(string)*
+smile 😀 end

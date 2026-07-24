@@ -91,14 +91,20 @@ const cases = {
   "errors/bad-number-exponent": "1e+",
   "errors/lone-minus": "-",
 
-  // Type Annotations on tables (default showTypes)
-  "tables/mixed-type-column": '[{"v":1,"w":"a"},{"v":"x","w":"b"}]',
-  "tables/integer-number-mix": '[{"n":1},{"n":1.5}]',
+  // Type Annotations on tables (opt-in via showTypes: true)
+  "tables/mixed-type-column": {
+    input: '[{"v":1,"w":"a"},{"v":"x","w":"b"}]',
+    options: { showTypes: true },
+  },
+  "tables/integer-number-mix": { input: '[{"n":1},{"n":1.5}]', options: { showTypes: true } },
   // A URL String is still a string: the column header is annotated even though
   // its cells render as links (only container detail-link columns stay bare).
-  "tables/url-column": '[{"u":"https://a.example"},{"u":"https://b.example"}]',
+  "tables/url-column": {
+    input: '[{"u":"https://a.example"},{"u":"https://b.example"}]',
+    options: { showTypes: true },
+  },
 
-  // Conversion options (v2): a case may carry <case>.options.json
+  // Conversion options: a case may carry <case>.options.json
   "options/heading-custom": { input: '{"a":1}', options: { heading: "Custom Heading" } },
   "options/heading-escaped": { input: "1", options: { heading: "# raw *md* | pipe" } },
   "options/heading-omitted": { input: '{"a":{"b":[1,2]}}', options: { heading: null } },
@@ -107,9 +113,12 @@ const cases = {
     options: { heading: "/t/0/kids" },
   },
   "options/heading-empty-error": { input: "1", options: { heading: "" } },
-  "options/show-types-off": {
-    input: '{"table1":[{"age":14,"degrees":[{"name":"B-Degree","year":"2023"}]}]}',
-    options: { showTypes: false },
+  // One case exercising every annotation site at once: paragraph scalar, list
+  // items, table header, and a Detail Section.
+  "options/show-types-on": {
+    input:
+      '{"s":"x","vals":[1,2.5,"two"],"table1":[{"age":14,"degrees":[{"name":"B-Degree","year":"2023"}]}]}',
+    options: { showTypes: true },
   },
 };
 

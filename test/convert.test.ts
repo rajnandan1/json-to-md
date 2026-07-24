@@ -31,7 +31,7 @@ describe("Output Document shape", () => {
 ###### e
 
 - **f**
-  - **g:** 1 *(integer)*
+  - **g:** 1
 `,
     );
   });
@@ -42,12 +42,12 @@ describe("Output Document shape", () => {
 
 ## values
 
-- 1 *(integer)*
-- two *(string)*
+- 1
+- two
 - \`null\`
 -
-  - true *(boolean)*
-  - false *(boolean)*
+  - true
+  - false
 - \`{}\`
 `,
     );
@@ -65,7 +65,7 @@ describe("Output Document shape", () => {
 
 ## table1
 
-| age *(integer)* | degrees |
+| age | degrees |
 | --- | --- |
 | 14 | [/table1/0/degrees](#table10degrees) |
 | 24 | [/table1/1/degrees](#table11degrees) |
@@ -74,7 +74,7 @@ describe("Output Document shape", () => {
 
 ### /table1/0/degrees
 
-| name *(string)* | year *(string)* |
+| name | year |
 | --- | --- |
 | B-Degree | 2023 |
 | C-Degree | 2024 |
@@ -83,7 +83,7 @@ describe("Output Document shape", () => {
 
 ### /table1/1/degrees
 
-| name *(string)* | year *(string)* |
+| name | year |
 | --- | --- |
 | K-Degree | 2003 |
 | M-Degree | 2004 |
@@ -94,9 +94,9 @@ describe("Output Document shape", () => {
 
 describe("root values", () => {
   it("renders root scalars directly under the heading", () => {
-    expect(convertJsonText("1.00")).toBe("# Results\n\n1.00 *(number)*\n");
-    expect(convertJsonValue(true)).toBe("# Results\n\ntrue *(boolean)*\n");
-    expect(convertJsonValue("hi")).toBe("# Results\n\nhi *(string)*\n");
+    expect(convertJsonText("1.00")).toBe("# Results\n\n1.00\n");
+    expect(convertJsonValue(true)).toBe("# Results\n\ntrue\n");
+    expect(convertJsonValue("hi")).toBe("# Results\n\nhi\n");
   });
 
   it("renders empty root containers explicitly", () => {
@@ -108,7 +108,7 @@ describe("root values", () => {
     expect(convertJsonValue([{ a: 1 }, { a: 2, b: 3 }])).toBe(
       `# Results
 
-| a *(integer)* | b *(integer)* |
+| a | b |
 | --- | --- |
 | 1 |  |
 | 2 | 3 |
@@ -123,7 +123,7 @@ describe("distinct blank states in a table", () => {
     expect(md).toBe(
       `# Results
 
-| a | b *(string)* |
+| a | b |
 | --- | --- |
 | \`null\` |  |
 |  | \`""\` |
@@ -139,9 +139,9 @@ describe("tabular arrays nested in lists render as indented tables (ADR-0003)", 
 
 ## outer
 
-- 1 *(integer)*
+- 1
 -
-  | x *(integer)* |
+  | x |
   | --- |
   | 1 |
   | 2 |
@@ -165,7 +165,7 @@ describe("tabular arrays nested in lists render as indented tables (ADR-0003)", 
 
 - **f**
   - **g**
-    | n *(integer)* |
+    | n |
     | --- |
     | 1 |
 `,
@@ -178,9 +178,9 @@ describe("tabular arrays nested in lists render as indented tables (ADR-0003)", 
 
 ## outer
 
-- 0 *(integer)*
+- 0
 -
-  | x *(integer)* | kids |
+  | x | kids |
   | --- | --- |
   | 1 | [/outer/1/0/kids](#outer10kids) |
 
@@ -188,7 +188,7 @@ describe("tabular arrays nested in lists render as indented tables (ADR-0003)", 
 
 ### /outer/1/0/kids
 
-| y *(integer)* |
+| y |
 | --- |
 | 9 |
 `,
@@ -198,9 +198,9 @@ describe("tabular arrays nested in lists render as indented tables (ADR-0003)", 
 
 describe("keys and pointers with collapsible spaces stay canonical", () => {
   it("renders boundary spaces in a key heading as &nbsp; (no trailing space)", () => {
-    expect(convertJsonValue({ " ": 1 })).toBe("# Results\n\n## &nbsp;\n\n1 *(integer)*\n");
+    expect(convertJsonValue({ " ": 1 })).toBe("# Results\n\n## &nbsp;\n\n1\n");
     expect(convertJsonValue({ "trailing ": 1 })).toBe(
-      "# Results\n\n## trailing&nbsp;\n\n1 *(integer)*\n",
+      "# Results\n\n## trailing&nbsp;\n\n1\n",
     );
   });
 
@@ -235,7 +235,7 @@ describe("table cell escaping", () => {
     expect(convertJsonValue([{ "a|b": "x|y" }])).toBe(
       `# Results
 
-| a\\|b *(string)* |
+| a\\|b |
 | --- |
 | x\\|y |
 `,
@@ -248,7 +248,7 @@ describe("numeric lexemes", () => {
     expect(convertJsonText("9007199254740993")).toContain("9007199254740993");
     expect(convertJsonValue(9007199254740993)).toContain("9007199254740992");
     expect(convertJsonText("1.00")).toContain("1.00");
-    expect(convertJsonValue(1.0)).toContain("\n1 *(integer)*\n");
+    expect(convertJsonValue(1.0)).toContain("\n1\n");
   });
 });
 
