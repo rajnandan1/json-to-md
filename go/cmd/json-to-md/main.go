@@ -11,7 +11,7 @@ import (
 	"io"
 	"os"
 
-	jsontomd "github.com/rajnandan1/json-to-md/go"
+	jsontomd "github.com/rajnandan1/json-to-md/go/v3"
 	"github.com/spf13/cobra"
 )
 

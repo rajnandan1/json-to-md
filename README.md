@@ -108,7 +108,7 @@ Paste JSON, watch it convert, toggle between the rendered preview and raw Markdo
 ### Install
 
 ```sh
-go get github.com/rajnandan1/json-to-md/go
+go get github.com/rajnandan1/json-to-md/go/v3
 ```
 
 ### Use
@@ -117,7 +117,7 @@ go get github.com/rajnandan1/json-to-md/go
 import (
 	"errors"
 
-	jsontomd "github.com/rajnandan1/json-to-md/go"
+	jsontomd "github.com/rajnandan1/json-to-md/go/v3"
 )
 
 md, err := jsontomd.ConvertText([]byte(`{"hello":"world"}`)) // byte-identical to convertJsonText
@@ -145,7 +145,7 @@ brew tap rajnandan1/homebrew-rajnandan
 brew trust rajnandan1/rajnandan     # once per machine; newer Homebrew gates third-party taps
 brew install json-to-md
 # or, via the Go toolchain:
-go install github.com/rajnandan1/json-to-md/go/cmd/json-to-md@latest
+go install github.com/rajnandan1/json-to-md/go/v3/cmd/json-to-md@latest
 ```
 
 ### Use
