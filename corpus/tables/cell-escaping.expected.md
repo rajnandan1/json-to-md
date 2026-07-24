@@ -1,5 +1,5 @@
 # Results
 
-| note *(string)* |
+| note |
 | --- |
 | a\|b<br>newline |

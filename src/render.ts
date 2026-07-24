@@ -12,7 +12,7 @@ export interface ConvertOptions {
    * shifting body heading levels. An empty string is INVALID_OPTION.
    */
   readonly heading?: string | null;
-  /** Emit Type Annotations (` *(integer)*` …) after annotatable values. Default true. */
+  /** Emit Type Annotations (` *(integer)*` …) after annotatable values. Default false. */
   readonly showTypes?: boolean;
 }
 
@@ -29,7 +29,7 @@ function resolveOptions(options: ConvertOptions): ResolvedOptions {
   if (heading === "") {
     throw new JsonToMarkdownError("INVALID_OPTION", "heading must not be empty; pass null to omit it");
   }
-  const showTypes = options.showTypes === undefined ? true : options.showTypes;
+  const showTypes = options.showTypes === undefined ? false : options.showTypes;
   if (typeof showTypes !== "boolean") {
     throw new JsonToMarkdownError("INVALID_OPTION", "showTypes must be a boolean");
   }

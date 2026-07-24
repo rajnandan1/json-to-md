@@ -1,3 +1,3 @@
 # Results
 
-12\. list-looking *(string)*
+12\. list-looking

@@ -1,3 +1,3 @@
 # Results
 
-hello world *(string)*
+hello world

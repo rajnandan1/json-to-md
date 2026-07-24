@@ -1,4 +1,4 @@
-module github.com/rajnandan1/json-to-md/go
+module github.com/rajnandan1/json-to-md/go/v3
 
 go 1.23.1
 

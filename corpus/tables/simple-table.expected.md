@@ -2,7 +2,7 @@
 
 ## people
 
-| name *(string)* | age *(integer)* |
+| name | age |
 | --- | --- |
 | Ada | 36 |
 | Lin |  |

@@ -7,7 +7,7 @@ import {
   convertJsonText,
   convertJsonValue,
   JsonToMarkdownError,
-} from "https://cdn.jsdelivr.net/npm/@rajnandan1/json-to-md@1/dist/index.js";
+} from "https://cdn.jsdelivr.net/npm/@rajnandan1/json-to-md@3/dist/index.js";
 
 const input = document.getElementById("input");
 const output = document.getElementById("output");
@@ -19,6 +19,8 @@ const btnParsed = document.getElementById("mode-parsed");
 const btnPreview = document.getElementById("mode-preview");
 const btnSource = document.getElementById("mode-source");
 const btnCopy = document.getElementById("copy");
+const optHeading = document.getElementById("opt-heading");
+const optTypes = document.getElementById("opt-types");
 const btnCopyInstall = document.getElementById("copy-install");
 const installCmd = document.getElementById("install-cmd");
 
@@ -56,7 +58,12 @@ const HINTS = {
 };
 
 function convert(source) {
-  if (inputMode === "serialized") return convertJsonText(source);
+  const options = {
+    // A cleared field means "omit the heading" — the library rejects "".
+    heading: optHeading.value === "" ? null : optHeading.value,
+    showTypes: optTypes.checked,
+  };
+  if (inputMode === "serialized") return convertJsonText(source, options);
   // Parsed path: JSON.parse here stands in for a caller passing already-parsed data.
   let value;
   try {
@@ -64,7 +71,7 @@ function convert(source) {
   } catch (error) {
     throw new JsonToMarkdownError("INVALID_JSON_SYNTAX", `JSON.parse failed: ${error.message}`);
   }
-  return convertJsonValue(value);
+  return convertJsonValue(value, options);
 }
 
 const bytes = (text) => new TextEncoder().encode(text).length;
@@ -181,6 +188,8 @@ btnParsed.addEventListener("click", () => setInputMode("parsed"));
 btnPreview.addEventListener("click", () => setOutputMode("preview"));
 btnSource.addEventListener("click", () => setOutputMode("source"));
 input.addEventListener("input", render);
+optHeading.addEventListener("input", render);
+optTypes.addEventListener("change", render);
 
 function copyFeedback(button, text) {
   const original = button.textContent;

@@ -11,7 +11,7 @@ import (
 	"io"
 	"os"
 
-	jsontomd "github.com/rajnandan1/json-to-md/go"
+	jsontomd "github.com/rajnandan1/json-to-md/go/v3"
 	"github.com/spf13/cobra"
 )
 
@@ -63,7 +63,7 @@ func printConversionError(w io.Writer, e *jsontomd.Error, asJSON bool) {
 	fmt.Fprintf(w, "json-to-md: %s%s: %s\n", e.Code, at, e.Message)
 }
 
-func run(cmd *cobra.Command, args []string) error {
+func run(cmd *cobra.Command, args []string, showTypes bool) error {
 	var input []byte
 	var err error
 	if len(args) == 1 && args[0] != "-" {
@@ -74,7 +74,11 @@ func run(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	out, err := jsontomd.ConvertText(input)
+	var opts []jsontomd.Option
+	if showTypes {
+		opts = append(opts, jsontomd.WithTypes())
+	}
+	out, err := jsontomd.ConvertText(input, opts...)
 	if err != nil {
 		return err
 	}
@@ -84,6 +88,7 @@ func run(cmd *cobra.Command, args []string) error {
 
 func main() {
 	var jsonErrors bool
+	var showTypes bool
 
 	root := &cobra.Command{
 		Use:   "json-to-md [FILE]",
@@ -101,14 +106,18 @@ Exit codes:
 		Example: `  json-to-md data.json > out.md
   curl -s https://api.example.com/items | json-to-md
   json-to-md --json broken.json 2> error.json`,
-		Args:          cobra.MaximumNArgs(1),
-		Version:       version,
-		RunE:          run,
+		Args:    cobra.MaximumNArgs(1),
+		Version: version,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return run(cmd, args, showTypes)
+		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
 	root.Flags().BoolVar(&jsonErrors, "json", false,
 		"emit conversion errors as JSON on stderr (fields: code, pointer, location, firstLocation, message)")
+	root.Flags().BoolVar(&showTypes, "types", false,
+		"annotate values with their JSON types (42 *(integer)*)")
 
 	err := root.Execute()
 	if err == nil {

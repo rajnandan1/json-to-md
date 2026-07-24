@@ -215,6 +215,16 @@
                 gap: 0.35rem;
                 margin-left: auto;
             }
+            .opt-label {
+                display: flex;
+                align-items: center;
+                gap: 0.4rem;
+                font-size: 0.78rem;
+                color: var(--bulma-text-weak);
+            }
+            .opt-label .input {
+                width: 9rem;
+            }
 
             /* Segmented controls: Bulma buttons.has-addons without its margins */
             .seg {
@@ -410,7 +420,7 @@
                         >npm</a
                     >
                     <a
-                        href="https://pkg.go.dev/github.com/rajnandan1/json-to-md/go"
+                        href="https://pkg.go.dev/github.com/rajnandan1/json-to-md/go/v3"
                         target="_blank"
                         rel="noopener"
                         >Go</a
@@ -448,6 +458,23 @@
                 <div class="pane-sub">
                     <span class="hint" id="input-hint"></span>
                     <div class="examples" id="examples"></div>
+                </div>
+                <div class="pane-sub" role="group" aria-label="Conversion options">
+                    <label class="opt-label" for="opt-heading">
+                        Heading
+                        <input
+                            id="opt-heading"
+                            class="input is-small"
+                            type="text"
+                            value="Results"
+                            placeholder="(omitted)"
+                            title="Document heading text; clear the field to omit the heading"
+                        />
+                    </label>
+                    <label class="opt-label" for="opt-types">
+                        <input id="opt-types" type="checkbox" />
+                        Type annotations
+                    </label>
                 </div>
                 <textarea
                     id="input"

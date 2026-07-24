@@ -1,3 +1,3 @@
 # Results
 
-bad \ud800 half *(string)*
+bad \ud800 half

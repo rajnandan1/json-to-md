@@ -2,20 +2,20 @@
 
 ## price
 
-1.00 *(number)*
+1.00
 
 ## big
 
-9007199254740993 *(integer)*
+9007199254740993
 
 ## exp
 
-1e2 *(number)*
+1e2
 
 ## neg
 
--0.0 *(number)*
+-0.0
 
 ## E
 
-2E+3 *(number)*
+2E+3

@@ -11,9 +11,9 @@
 // All functions are pure: they never mutate input, share no state, are safe
 // for concurrent use, and fail atomically — on error no partial Markdown is
 // returned. Every Output Document begins with its Document Heading ("# Results"
-// unless WithHeading/WithoutHeading says otherwise), annotates value types
-// unless WithoutTypes is given, and uses canonical spacing (LF endings, one
-// blank line between blocks, one final newline).
+// unless WithHeading/WithoutHeading says otherwise), leaves values bare unless
+// WithTypes opts into Type Annotations, and uses canonical spacing (LF
+// endings, one blank line between blocks, one final newline).
 package jsontomd
 
 import (
@@ -22,7 +22,7 @@ import (
 )
 
 // Option configures a conversion. The zero configuration (no options) uses
-// the Document Heading "Results" and emits Type Annotations — the same
+// the Document Heading "Results" and emits no Type Annotations — the same
 // defaults as the TypeScript implementation.
 type Option func(*convertOptions)
 
@@ -45,14 +45,14 @@ func WithoutHeading() Option {
 	return func(o *convertOptions) { o.omitHeading = true }
 }
 
-// WithoutTypes suppresses Type Annotations, reproducing v1 output byte for
-// byte.
-func WithoutTypes() Option {
-	return func(o *convertOptions) { o.showTypes = false }
+// WithTypes emits Type Annotations (` *(integer)*` …) after annotatable
+// values. They are off by default.
+func WithTypes() Option {
+	return func(o *convertOptions) { o.showTypes = true }
 }
 
 func resolveOptions(opts []Option) (convertOptions, error) {
-	o := convertOptions{heading: "Results", showTypes: true}
+	o := convertOptions{heading: "Results"}
 	for _, opt := range opts {
 		opt(&o)
 	}

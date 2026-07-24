@@ -75,8 +75,8 @@ func corpusOptions(t *testing.T, base string) []Option {
 		if err := json.Unmarshal(st, &b); err != nil {
 			t.Fatalf("bad showTypes option: %v", err)
 		}
-		if !b {
-			opts = append(opts, WithoutTypes())
+		if b {
+			opts = append(opts, WithTypes())
 		}
 	}
 	return opts
@@ -153,7 +153,7 @@ func TestConvertValue(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		want := "# Results\n\n## z\n\n1.00 *(number)*\n\n## a\n\nx *(string)*\n"
+		want := "# Results\n\n## z\n\n1.00\n\n## a\n\nx\n"
 		if got != want {
 			t.Fatalf("got %q, want %q", got, want)
 		}

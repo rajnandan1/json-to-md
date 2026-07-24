@@ -1,3 +1,3 @@
 # Results
 
-https://example.com/a b *(string)*
+https://example.com/a b

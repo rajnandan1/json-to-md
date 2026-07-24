@@ -1,3 +1,3 @@
 # Results
 
-ftp://example.com *(string)*
+ftp://example.com

@@ -2,12 +2,12 @@
 
 ## `""`
 
-1 *(integer)*
+1
 
 ## # md
 
-2 *(integer)*
+2
 
 ## a/b\~c
 
-3 *(integer)*
+3

@@ -1,3 +1,3 @@
 # Results
 
-See https://example.com *(string)*
+See https://example.com
